@@ -1,21 +1,71 @@
 package main
 
 import (
-  "fmt"
+	_ "embed"
+	"flag"
+	"github.com/anhgelus/gokord"
+	"github.com/bwmarrin/discordgo"
 )
 
-//TIP <p>To run your code, right-click the code and select <b>Run</b>.</p> <p>Alternatively, click
-// the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.</p>
+var (
+	token   string
+	Version = &gokord.Version{
+		Major: 0,
+		Minor: 0,
+		Patch: 0,
+	}
+	//go:embed updates.json
+	updatesData []byte
+)
+
+func init() {
+	flag.StringVar(&token, "token", "", "token of the bot")
+}
 
 func main() {
-  //TIP <p>Press <shortcut actionId="ShowIntentionActions"/> when your caret is at the underlined text
-  // to see how GoLand suggests fixing the warning.</p><p>Alternatively, if available, click the lightbulb to view possible fixes.</p>
-  s := "gopher"
-  fmt.Printf("Hello and welcome, %s!\n", s)
+	flag.Parse()
+	gokord.UseRedis = false
+	err := gokord.SetupConfigs(&Config{}, nil)
+	if err != nil {
+		panic(err)
+	}
 
-  for i := 1; i <= 5; i++ {
-	//TIP <p>To start your debugging session, right-click your code in the editor and select the Debug option.</p> <p>We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-	// for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.</p>
-	fmt.Println("i =", 100/i)
-  }
+	innovations, err := gokord.LoadInnovationFromJson(updatesData)
+	if err != nil {
+		panic(err)
+	}
+
+	bot := gokord.Bot{
+		Token: token,
+		Status: []*gokord.Status{
+			{
+				Type:    gokord.WatchStatus,
+				Content: "Les Copaings",
+			},
+			{
+				Type:    gokord.GameStatus,
+				Content: "être dev par @anhgelus",
+			},
+			{
+				Type:    gokord.ListeningStatus,
+				Content: "http 418, I'm a tea pot",
+			},
+			{
+				Type:    gokord.GameStatus,
+				Content: "Les Copaings Bot " + Version.String(),
+			},
+		},
+		Commands:    []gokord.CommandBuilder{},
+		AfterInit:   afterInit,
+		Innovations: innovations,
+		Version:     Version,
+		Intents: discordgo.IntentsAllWithoutPrivileged |
+			discordgo.IntentsMessageContent |
+			discordgo.IntentGuildMembers,
+	}
+	bot.Start()
+}
+
+func afterInit(dg *discordgo.Session) {
+	// handles here
 }
