@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/anhgelus/gokord"
 	"github.com/pelletier/go-toml/v2"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +14,7 @@ type Config struct {
 }
 
 func (c *Config) Connect() (*gorm.DB, error) {
-	return gorm.Open(nil, &gorm.Config{})
+	return gorm.Open(sqlite.Open(c.Database), &gorm.Config{})
 }
 
 func (c *Config) IsDebug() bool {
