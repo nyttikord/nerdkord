@@ -39,29 +39,23 @@ func main() {
 		Token: token,
 		Status: []*gokord.Status{
 			{
-				Type:    gokord.WatchStatus,
-				Content: "Les Copaings",
-			},
-			{
 				Type:    gokord.GameStatus,
-				Content: "être dev par @anhgelus",
+				Content: "dev by nyttikord",
 			},
 			{
 				Type:    gokord.ListeningStatus,
-				Content: "http 418, I'm a tea pot",
+				Content: "maths",
 			},
 			{
 				Type:    gokord.GameStatus,
-				Content: "Les Copaings Bot " + Version.String(),
+				Content: "nerdkord " + Version.String(),
 			},
 		},
 		Commands:    []gokord.CommandBuilder{},
 		AfterInit:   afterInit,
 		Innovations: innovations,
 		Version:     Version,
-		Intents: discordgo.IntentsAllWithoutPrivileged |
-			discordgo.IntentsMessageContent |
-			discordgo.IntentGuildMembers,
+		Intents:     discordgo.IntentsAllWithoutPrivileged,
 	}
 	bot.Start()
 }
