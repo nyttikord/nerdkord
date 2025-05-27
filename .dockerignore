@@ -3,3 +3,5 @@ README.md
 .env.example
 .gitignore
 data
+start.sh
+nerdkord.db
