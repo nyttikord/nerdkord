@@ -35,7 +35,7 @@ func (c *Config) GetSQLCredentials() gokord.SQLCredentials {
 func (c *Config) SetDefaultValues() {
 	c.Debug = false
 	c.Author = "nyttikord"
-	c.Database = "sqlite.db"
+	c.Database = "nerdkord.db"
 }
 
 func (c *Config) Marshal() ([]byte, error) {

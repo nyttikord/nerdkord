@@ -1,0 +1,9 @@
+services:
+  bot:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./config:/app/config
+      - ./nerdkord.db:/app/nerdkord.db
