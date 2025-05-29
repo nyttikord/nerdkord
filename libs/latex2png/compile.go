@@ -10,7 +10,6 @@ import (
 func Compile(latex string, opt *Options) (*os.File, error) {
 	preambleFile, err := os.Open(opt.PreambleFilePath)
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 
@@ -27,25 +26,21 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 
 	f, err := os.CreateTemp(tempDir, "*.tex")
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 
 	_, err = preambleFile.WriteTo(f)
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 
 	err = preambleFile.Close()
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 
 	_, err = f.WriteString(latex)
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 
@@ -57,12 +52,10 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 	)
 	err = cmd.Start()
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 	err = cmd.Wait()
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 
@@ -85,7 +78,6 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 	)
 	err = cmd.Start()
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 	// Ignore this error because it is triggered everytime
@@ -93,7 +85,6 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 
 	err = f.Close()
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 
