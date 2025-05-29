@@ -5,6 +5,7 @@ import (
 	"flag"
 	"github.com/anhgelus/gokord"
 	"github.com/bwmarrin/discordgo"
+	"github.com/nyttikord/nerdkord/commands"
 )
 
 var (
@@ -35,6 +36,13 @@ func main() {
 		panic(err)
 	}
 
+	latexCmd := gokord.NewCommand("latex", "Compiles latex source").
+		AddOption(gokord.NewOption(
+			discordgo.ApplicationCommandOptionString,
+			"source",
+			"The latex source you want to compile").IsRequired()).
+		SetHandler(commands.Latex)
+
 	bot := gokord.Bot{
 		Token: token,
 		Status: []*gokord.Status{
@@ -51,7 +59,9 @@ func main() {
 				Content: "nerdkord " + Version.String(),
 			},
 		},
-		Commands:    []gokord.CommandBuilder{},
+		Commands: []gokord.CommandBuilder{
+			latexCmd,
+		},
 		AfterInit:   afterInit,
 		Innovations: innovations,
 		Version:     Version,
