@@ -29,6 +29,7 @@ func Latex(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
+		utils.SendDebug("commands/latex.go - Error while compiling latex")
 		resp.Message("Error while compiling latex")
 		err = resp.Send()
 		if err != nil {
