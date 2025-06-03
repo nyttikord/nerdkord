@@ -23,9 +23,9 @@ func Latexify(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	resp.Message(fmt.Sprintf("LaTeX code of `%s`: \n```\n%s\n```", expr, res))
+	err = resp.Message(fmt.Sprintf("LaTeX code of `%s`: \n```\n%s\n```", expr, res)).
+		Send()
 
-	err = resp.Send()
 	if err != nil {
 		utils.SendAlert("commands/latexify.go - Sending result", err.Error())
 	}
