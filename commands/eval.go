@@ -9,13 +9,27 @@ import (
 import "github.com/nyttikord/gomath"
 
 func Eval(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	data := i.Interaction.ApplicationCommandData()
-	mathExpr := data.GetOption("expression").StringValue()
+	optMap := utils.GenerateOptionMap(i)
+	mathExprOpt, ok := optMap["expression"]
+	if !ok {
+		utils.SendAlert("commands/eval.go - Getting expression option", "expression option if not present")
+
+		err := utils.NewResponseBuilder(s, i).
+			IsEphemeral().
+			Message("An error occurred while running this command. Try again later, or contact a bot developer").
+			Send()
+
+		if err != nil {
+			utils.SendAlert("commands/eval.go - Sending internal error message", err.Error())
+		}
+
+		return
+	}
+	mathExpr := mathExprOpt.StringValue()
+
 	digits := 6
-
-	var precisionOpt = data.GetOption("precision")
-
-	if precisionOpt != nil {
+	precisionOpt, ok := optMap["precision"]
+	if ok {
 		digits = int(precisionOpt.IntValue())
 	}
 
