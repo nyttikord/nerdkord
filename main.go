@@ -5,6 +5,7 @@ import (
 	"flag"
 	"github.com/anhgelus/gokord"
 	"github.com/bwmarrin/discordgo"
+	"github.com/nyttikord/nerdkord/commands"
 )
 
 var (
@@ -35,6 +36,17 @@ func main() {
 		panic(err)
 	}
 
+	evalCmd := gokord.NewCommand("eval", "Parses and evaluates a math expression").
+		AddOption(gokord.NewOption(
+			discordgo.ApplicationCommandOptionString,
+			"expression",
+			"The expression you want to evaluate").IsRequired()).
+		AddOption(gokord.NewOption(
+			discordgo.ApplicationCommandOptionInteger,
+			"precision",
+			"The number of digits you want. Default : 6")).
+		SetHandler(commands.Eval)
+
 	bot := gokord.Bot{
 		Token: token,
 		Status: []*gokord.Status{
@@ -51,7 +63,9 @@ func main() {
 				Content: "nerdkord " + Version.String(),
 			},
 		},
-		Commands:    []gokord.CommandBuilder{},
+		Commands: []gokord.CommandBuilder{
+			evalCmd,
+		},
 		AfterInit:   afterInit,
 		Innovations: innovations,
 		Version:     Version,
