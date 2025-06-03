@@ -5,6 +5,7 @@ go 1.24
 require (
 	github.com/anhgelus/gokord v0.8.0
 	github.com/bwmarrin/discordgo v0.29.0
+	github.com/nyttikord/gomath v0.0.0-20250528140443-5b5ba5b561b7
 	github.com/pelletier/go-toml/v2 v2.2.4
 	gorm.io/driver/sqlite v1.5.7
 	gorm.io/gorm v1.30.0
