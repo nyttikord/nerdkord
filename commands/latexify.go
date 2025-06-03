@@ -10,7 +10,24 @@ import (
 func Latexify(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
 
-	expr := i.Interaction.ApplicationCommandData().GetOption("expression").StringValue()
+	optMap := utils.GenerateOptionMap(i)
+	exprOpt, ok := optMap["expression"]
+
+	if !ok {
+		utils.SendAlert("commands/latexify.go - Getting expression option", "expression option is not present")
+
+		err := utils.NewResponseBuilder(s, i).
+			IsEphemeral().
+			Message("An error occurred while running this command. Try again later, or contact a bot developer").
+			Send()
+
+		if err != nil {
+			utils.SendAlert("commands/latexify.go - Sending internal error message", err.Error())
+		}
+
+		return
+	}
+	expr := exprOpt.StringValue()
 
 	res, err := gomath.ParseAndConvertToLatex(expr, &gomath.Options{})
 
