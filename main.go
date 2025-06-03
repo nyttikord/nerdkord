@@ -71,5 +71,5 @@ func main() {
 }
 
 func afterInit(dg *discordgo.Session) {
-	// handles here
+	dg.AddHandler(commands.OnLatexModalSubmit)
 }

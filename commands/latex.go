@@ -7,7 +7,11 @@ import (
 	"image/color"
 )
 
-func Latex(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if i.Type != discordgo.InteractionModalSubmit {
+		return
+	}
+
 	resp := utils.NewResponseBuilder(s, i).IsDeferred().IsEphemeral()
 	err := resp.Send()
 	if err != nil {
@@ -15,7 +19,13 @@ func Latex(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	latexSource := i.Interaction.ApplicationCommandData().Options[0].StringValue()
+	data := i.ModalSubmitData()
+	if data.CustomID != "latex_modal" {
+		utils.SendDebug("commands/latex.go - Unknown modal ID")
+		return
+	}
+
+	latexSource := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 
 	file, err := latex2png.Compile(latexSource, &latex2png.Options{
 		LatexBinary:      "latex",
@@ -47,5 +57,33 @@ func Latex(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
+	}
+}
+
+func Latex(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseModal,
+		Data: &discordgo.InteractionResponseData{
+			CustomID: "latex_modal",
+			Title:    "Latex compiler",
+			Components: []discordgo.MessageComponent{
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.TextInput{
+							CustomID:    "source",
+							Label:       "Source",
+							Style:       discordgo.TextInputParagraph,
+							Placeholder: "Did you know $1 + 1 = 2$ ?",
+							Required:    true,
+							MinLength:   0,
+							MaxLength:   4000,
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Sending modal", err.Error())
 	}
 }
