@@ -36,6 +36,13 @@ func main() {
 		panic(err)
 	}
 
+	latexifyCmd := gokord.NewCommand("latexify", "Converts a math expression to latex").
+		AddOption(gokord.NewOption(
+			discordgo.ApplicationCommandOptionString,
+			"expression",
+			"The math expression to convert").IsRequired()).
+		SetHandler(commands.Latexify)
+
 	evalCmd := gokord.NewCommand("eval", "Parses and evaluates a math expression").
 		AddOption(gokord.NewOption(
 			discordgo.ApplicationCommandOptionString,
@@ -46,6 +53,7 @@ func main() {
 			"precision",
 			"The number of digits you want. Default : 6")).
 		SetHandler(commands.Eval)
+
 
 	bot := gokord.Bot{
 		Token: token,
@@ -64,6 +72,7 @@ func main() {
 			},
 		},
 		Commands: []gokord.CommandBuilder{
+			latexifyCmd,
 			evalCmd,
 		},
 		AfterInit:   afterInit,
