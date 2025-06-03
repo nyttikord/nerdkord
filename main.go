@@ -5,6 +5,7 @@ import (
 	"flag"
 	"github.com/anhgelus/gokord"
 	"github.com/bwmarrin/discordgo"
+	"github.com/nyttikord/nerdkord/commands"
 )
 
 var (
@@ -35,6 +36,13 @@ func main() {
 		panic(err)
 	}
 
+	latexifyCmd := gokord.NewCommand("latexify", "Converts a math expression to latex").
+		AddOption(gokord.NewOption(
+			discordgo.ApplicationCommandOptionString,
+			"expression",
+			"The math expression to convert").IsRequired()).
+		SetHandler(commands.Latexify)
+
 	bot := gokord.Bot{
 		Token: token,
 		Status: []*gokord.Status{
@@ -51,7 +59,9 @@ func main() {
 				Content: "nerdkord " + Version.String(),
 			},
 		},
-		Commands:    []gokord.CommandBuilder{},
+		Commands: []gokord.CommandBuilder{
+			latexifyCmd,
+		},
 		AfterInit:   afterInit,
 		Innovations: innovations,
 		Version:     Version,
