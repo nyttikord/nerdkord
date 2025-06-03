@@ -12,7 +12,7 @@ func Eval(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	optMap := utils.GenerateOptionMap(i)
 	mathExprOpt, ok := optMap["expression"]
 	if !ok {
-		utils.SendAlert("commands/eval.go - Getting expression option", "expression option if not present")
+		utils.SendAlert("commands/eval.go - Getting expression option", "expression option is not present")
 
 		err := utils.NewResponseBuilder(s, i).
 			IsEphemeral().
