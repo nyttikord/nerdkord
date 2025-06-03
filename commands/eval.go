@@ -25,8 +25,8 @@ func Eval(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
 
 	if err != nil {
-		resp.Message("Syntax error: " + err.Error())
-		err = resp.Send()
+		err = resp.Message("Syntax error: " + err.Error()).
+			Send()
 		if err != nil {
 			utils.SendAlert("commands/eval.go - Sending error", err.Error())
 		}
@@ -35,9 +35,8 @@ func Eval(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	decimal, _ := gomath.ParseAndCalculate(mathExpr, &gomath.Options{Decimal: true, Precision: int(digits)})
 
-	resp.Message(formatResponse(mathExpr, precise, decimal))
-
-	err = resp.Send()
+	err = resp.Message(formatResponse(mathExpr, precise, decimal)).
+		Send()
 	if err != nil {
 		utils.SendAlert("commands/eval.go - Sending result", err.Error())
 	}
