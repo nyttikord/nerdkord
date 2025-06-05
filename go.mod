@@ -3,10 +3,11 @@ module github.com/nyttikord/nerdkord
 go 1.24
 
 require (
-	github.com/anhgelus/gokord v0.8.0
+	github.com/anhgelus/gokord v0.10.0
 	github.com/bwmarrin/discordgo v0.29.0
+	github.com/nyttikord/gomath v0.0.0-20250604173704-b6589478706d
 	github.com/pelletier/go-toml/v2 v2.2.4
-	gorm.io/driver/sqlite v1.5.7
+	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
 )
 
