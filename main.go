@@ -37,10 +37,6 @@ func main() {
 	}
 
 	latexCmd := gokord.NewCommand("latex", "Compiles latex source").
-		AddOption(gokord.NewOption(
-			discordgo.ApplicationCommandOptionString,
-			"source",
-			"The latex source you want to compile").IsRequired()).
 		SetHandler(commands.Latex)
 
 	latexifyCmd := gokord.NewCommand("latexify", "Converts a math expression to latex").
@@ -60,7 +56,6 @@ func main() {
 			"precision",
 			"The number of digits you want. Default : 6")).
 		SetHandler(commands.Eval)
-
 
 	bot := gokord.Bot{
 		Token: token,

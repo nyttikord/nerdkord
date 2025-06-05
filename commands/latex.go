@@ -40,7 +40,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if err != nil {
 		utils.SendDebug("commands/latex.go - Error while compiling latex")
-		resp.Message("Error while compiling latex")
+		resp.SetMessage("Error while compiling latex")
 		err = resp.Send()
 		if err != nil {
 			utils.SendAlert("commands/latex.go - Sending error", err.Error())
@@ -60,7 +60,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func Latex(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, _ utils.OptionMap, _ *utils.ResponseBuilder) {
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseModal,
 		Data: &discordgo.InteractionResponseData{
