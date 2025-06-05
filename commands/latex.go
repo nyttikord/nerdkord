@@ -48,16 +48,16 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	_, err = s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-		Files: []*discordgo.File{{
-			Name:        "generated_latex.png",
-			ContentType: "image/png",
-			Reader:      file,
-		}},
-	})
+	err = resp.AddFile(&discordgo.File{
+		Name:        "generated_latex.png",
+		ContentType: "image/png",
+		Reader:      file,
+	}).IsEdit().Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
 	}
+
+	_ = file.Close()
 }
 
 func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, _ utils.OptionMap, _ *utils.ResponseBuilder) {

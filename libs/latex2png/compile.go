@@ -9,6 +9,10 @@ import (
 
 func Compile(latex string, opt *Options) (*os.File, error) {
 	preambleFile, err := os.Open(opt.PreambleFilePath)
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(preambleFile)
+
 	if err != nil {
 		return nil, err
 	}
@@ -25,16 +29,14 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 	}
 
 	f, err := os.CreateTemp(tempDir, "*.tex")
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = preambleFile.WriteTo(f)
-	if err != nil {
-		return nil, err
-	}
-
-	err = preambleFile.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -82,11 +84,6 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 	}
 	// Ignore this error because it is triggered everytime
 	_ = cmd.Wait()
-
-	err = f.Close()
-	if err != nil {
-		return nil, err
-	}
 
 	return os.Open(strings.Split(f.Name(), ".")[0] + ".png")
 }
