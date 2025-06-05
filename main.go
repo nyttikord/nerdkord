@@ -36,6 +36,9 @@ func main() {
 		panic(err)
 	}
 
+	latexCmd := gokord.NewCommand("latex", "Compiles latex source").
+		SetHandler(commands.Latex)
+
 	latexifyCmd := gokord.NewCommand("latexify", "Converts a math expression to latex").
 		AddOption(gokord.NewOption(
 			discordgo.ApplicationCommandOptionString,
@@ -71,6 +74,7 @@ func main() {
 			},
 		},
 		Commands: []gokord.CommandBuilder{
+			latexCmd,
 			latexifyCmd,
 			calculateCmd,
 		},
@@ -83,5 +87,5 @@ func main() {
 }
 
 func afterInit(dg *discordgo.Session) {
-	// handles here
+	dg.AddHandler(commands.OnLatexModalSubmit)
 }
