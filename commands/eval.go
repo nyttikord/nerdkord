@@ -33,7 +33,7 @@ func Eval(_ *discordgo.Session, _ *discordgo.InteractionCreate, optMap utils.Opt
 		digits = int(precisionOpt.IntValue())
 	}
 
-	precise, err := gomath.ParseAndCalculate(mathExpr, &gomath.Options{Decimal: false})
+	result, err := gomath.Parse(mathExpr)
 
 	if err != nil {
 		err = resp.SetMessage("Syntax error: " + err.Error()).
@@ -44,32 +44,20 @@ func Eval(_ *discordgo.Session, _ *discordgo.InteractionCreate, optMap utils.Opt
 		return
 	}
 
-	if digits < 0 {
-		err = resp.SetMessage(formatResponse(mathExpr, precise)).
-			Send()
-		if err != nil {
-			utils.SendAlert("commands/eval.go - Sending result", err.Error())
-		}
-		return
-	}
-	decimal, _ := gomath.ParseAndCalculate(mathExpr, &gomath.Options{Decimal: true, Precision: int(digits)})
-
-	err = resp.SetMessage(formatResponseDecimal(mathExpr, precise, decimal)).
+	err = resp.SetMessage(formatResponse(mathExpr, result, digits)).
 		Send()
 	if err != nil {
 		utils.SendAlert("commands/eval.go - Sending decimal result", err.Error())
 	}
 }
 
-func formatResponse(expr string, precise string) string {
-	return fmt.Sprintf("```\n"+
-		"%s = %s"+
-		"\n```", expr, precise)
-}
+func formatResponse(expr string, result gomath.Result, precision int) string {
+	if precision < -1 || result.IsExact(precision) {
+		return fmt.Sprintf("```\n%s = %s\n```", expr, result.String())
+	}
 
-func formatResponseDecimal(expr string, precise string, decimal string) string {
 	return fmt.Sprintf("```\n"+
 		"%s = %s"+
 		"\n"+strings.Repeat(" ", len(expr))+" ≈ %s"+
-		"\n```", expr, precise, decimal)
+		"\n```", expr, result.String(), result.Approx(precision))
 }

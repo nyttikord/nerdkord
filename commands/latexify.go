@@ -27,18 +27,27 @@ func Latexify(_ *discordgo.Session, _ *discordgo.InteractionCreate, optMap utils
 	}
 	expr := exprOpt.StringValue()
 
-	res, err := gomath.ParseAndConvertToLatex(expr, &gomath.Options{})
+	result, err := gomath.Parse(expr)
 
 	if err != nil {
-		resp.SetMessage("Syntax error: " + err.Error())
-		err = resp.Send()
+		err = resp.SetMessage("Syntax error: " + err.Error()).Send()
 		if err != nil {
-			utils.SendAlert("commands/latexify.go - Sending error", err.Error())
+			utils.SendAlert("commands/latexify.go - Sending syntax error", err.Error())
 		}
 		return
 	}
 
-	err = resp.SetMessage(fmt.Sprintf("LaTeX code of `%s`: \n```\n%s\n```", expr, res)).
+	latex, err := result.LaTeX()
+
+	if err != nil {
+		utils.SendDebug("commands/latexify.go - Couldn't convert to latex")
+		err = resp.SetMessage("Couldn't convert expression to LaTeX.").Send()
+		if err != nil {
+			utils.SendAlert("commands/latexify.go - Sending latex conversion error", err.Error())
+		}
+	}
+
+	err = resp.SetMessage(fmt.Sprintf("LaTeX code of `%s`: \n```latex\n%s\n```", expr, latex)).
 		Send()
 
 	if err != nil {
