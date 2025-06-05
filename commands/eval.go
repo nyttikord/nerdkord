@@ -8,15 +8,15 @@ import (
 )
 import "github.com/nyttikord/gomath"
 
-func Eval(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	optMap := utils.GenerateOptionMap(i)
+func Eval(_ *discordgo.Session, _ *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
 	mathExprOpt, ok := optMap["expression"]
+	resp.IsEphemeral()
+
 	if !ok {
 		utils.SendAlert("commands/eval.go - Getting expression option", "expression option is not present")
 
-		err := utils.NewResponseBuilder(s, i).
-			IsEphemeral().
-			Message("An error occurred while running this command. Try again later, or contact a bot developer").
+		err := resp.
+			SetMessage("An error occurred while running this command. Try again later, or contact a bot developer").
 			Send()
 
 		if err != nil {
@@ -35,10 +35,8 @@ func Eval(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	precise, err := gomath.ParseAndCalculate(mathExpr, &gomath.Options{Decimal: false})
 
-	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
-
 	if err != nil {
-		err = resp.Message("Syntax error: " + err.Error()).
+		err = resp.SetMessage("Syntax error: " + err.Error()).
 			Send()
 		if err != nil {
 			utils.SendAlert("commands/eval.go - Sending error", err.Error())
@@ -47,7 +45,7 @@ func Eval(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if digits < 0 {
-		err = resp.Message(formatResponse(mathExpr, precise)).
+		err = resp.SetMessage(formatResponse(mathExpr, precise)).
 			Send()
 		if err != nil {
 			utils.SendAlert("commands/eval.go - Sending result", err.Error())
@@ -56,7 +54,7 @@ func Eval(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	decimal, _ := gomath.ParseAndCalculate(mathExpr, &gomath.Options{Decimal: true, Precision: int(digits)})
 
-	err = resp.Message(formatResponseDecimal(mathExpr, precise, decimal)).
+	err = resp.SetMessage(formatResponseDecimal(mathExpr, precise, decimal)).
 		Send()
 	if err != nil {
 		utils.SendAlert("commands/eval.go - Sending decimal result", err.Error())

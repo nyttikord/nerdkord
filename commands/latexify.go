@@ -7,18 +7,16 @@ import (
 	"github.com/nyttikord/gomath"
 )
 
-func Latexify(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
+func Latexify(_ *discordgo.Session, _ *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
+	resp.IsEphemeral()
 
-	optMap := utils.GenerateOptionMap(i)
 	exprOpt, ok := optMap["expression"]
 
 	if !ok {
 		utils.SendAlert("commands/latexify.go - Getting expression option", "expression option is not present")
 
-		err := utils.NewResponseBuilder(s, i).
-			IsEphemeral().
-			Message("An error occurred while running this command. Try again later, or contact a bot developer").
+		err := resp.
+			SetMessage("An error occurred while running this command. Try again later, or contact a bot developer").
 			Send()
 
 		if err != nil {
@@ -32,7 +30,7 @@ func Latexify(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	res, err := gomath.ParseAndConvertToLatex(expr, &gomath.Options{})
 
 	if err != nil {
-		resp.Message("Syntax error: " + err.Error())
+		resp.SetMessage("Syntax error: " + err.Error())
 		err = resp.Send()
 		if err != nil {
 			utils.SendAlert("commands/latexify.go - Sending error", err.Error())
@@ -40,7 +38,7 @@ func Latexify(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err = resp.Message(fmt.Sprintf("LaTeX code of `%s`: \n```\n%s\n```", expr, res)).
+	err = resp.SetMessage(fmt.Sprintf("LaTeX code of `%s`: \n```\n%s\n```", expr, res)).
 		Send()
 
 	if err != nil {
