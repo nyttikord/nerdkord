@@ -1,20 +1,21 @@
 package latex2png
 
 import (
+	"io"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 )
 
-func Compile(latex string, opt *Options) (*os.File, error) {
+func Compile(output io.Writer, latex string, opt *Options) error {
 	preambleFile, err := os.Open(opt.PreambleFilePath)
 	defer func(f *os.File) {
 		_ = f.Close()
 	}(preambleFile)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if opt.AddBeginDocument {
@@ -28,23 +29,27 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 	} else {
 		tempDir = os.TempDir()
 	}
+	tempDir, err = os.MkdirTemp(tempDir, "nerdkord_*_latex_compilation")
+	if err != nil {
+		return err
+	}
 
 	f, err := os.CreateTemp(tempDir, "nerdkord_*.tex")
 	defer func(f *os.File) {
 		_ = f.Close()
 	}(f)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	_, err = preambleFile.WriteTo(f)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	_, err = f.WriteString(latex)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	cmd := exec.Command(
@@ -55,11 +60,11 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 	)
 	err = cmd.Start()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = cmd.Wait()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	bg := formatColor(opt.BackgroundColor)
@@ -79,12 +84,27 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 		strings.Split(f.Name(), ".")[0]+".png",
 		strings.Split(f.Name(), ".")[0]+".dvi",
 	)
+
 	err = cmd.Start()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	// Ignore this error because it is triggered everytime
 	_ = cmd.Wait()
 
-	return os.Open(strings.Split(f.Name(), ".")[0] + ".png")
+	outputFile, err := os.Open(strings.Split(f.Name(), ".")[0] + ".png")
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(outputFile)
+	if err != nil {
+		return err
+	}
+
+	_, err = outputFile.WriteTo(output)
+	if err != nil {
+		return nil
+	}
+
+	return os.RemoveAll(tempDir)
+
 }
