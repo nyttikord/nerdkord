@@ -5,33 +5,24 @@ import (
 	"image/color"
 )
 
-func Pad(img image.Image, padding int) *image.RGBA64 {
+func Pad(img image.Image, padding int, bgColor color.Color) *image.RGBA64 {
 	if padding < 0 {
 		panic("padding should be positive")
 	}
 
 	imgBounds := img.Bounds()
 
-	res := image.NewRGBA64(image.Rectangle{
-		Min: image.Point{
-			X: imgBounds.Min.X - padding,
-			Y: imgBounds.Min.Y - padding,
-		},
-		Max: image.Point{
-			X: imgBounds.Max.X + padding,
-			Y: imgBounds.Max.Y + padding,
-		},
-	})
+	res := image.NewRGBA64(image.Rect(0, 0, imgBounds.Dx()+2*padding, imgBounds.Dy()+2*padding))
 
 	resBounds := res.Bounds()
 
 	for y := resBounds.Min.Y; y < resBounds.Max.Y; y++ {
 		for x := resBounds.Min.X; x < resBounds.Max.X; x++ {
-			if imgBounds.Min.X <= x && x < imgBounds.Max.X &&
-				imgBounds.Min.Y <= y && y < imgBounds.Max.Y {
-				res.Set(x, y, img.At(x, y))
+			if padding <= x && x < resBounds.Max.X-padding &&
+				padding <= y && y < resBounds.Max.Y-padding {
+				res.Set(x, y, img.At(x+imgBounds.Min.X-padding, y+imgBounds.Min.Y-padding))
 			} else {
-				res.Set(x, y, color.Transparent)
+				res.Set(x, y, bgColor)
 			}
 		}
 	}
