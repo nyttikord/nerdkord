@@ -18,7 +18,8 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 	}
 
 	if opt.AddBeginDocument {
-		latex = "\\begin{document}" + latex + "\\end{document}"
+		// Minipage environment forces a maximal width
+		latex = "\\begin{document}\n\\begin{minipage}{16cm}\n" + latex + "\\end{minipage}\n\\end{document}"
 	}
 
 	var tempDir string
@@ -28,7 +29,7 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 		tempDir = os.TempDir()
 	}
 
-	f, err := os.CreateTemp(tempDir, "*.tex")
+	f, err := os.CreateTemp(tempDir, "nerdkord_*.tex")
 	defer func(f *os.File) {
 		_ = f.Close()
 	}(f)

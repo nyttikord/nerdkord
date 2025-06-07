@@ -1,10 +1,19 @@
 package commands
 
 import (
+	"bytes"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
+	"github.com/nyttikord/nerdkord/libs/img"
 	"github.com/nyttikord/nerdkord/libs/latex2png"
 	"image/color"
+	"image/png"
+	"math"
+)
+
+var (
+	bgColor = color.RGBA{R: 54, G: 57, B: 62, A: 255}
+	fgColor = color.White
 )
 
 func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -33,17 +42,42 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		PreambleFilePath: "config/defaultPreamble.tex",
 		AddBeginDocument: true,
 		OutputFormat:     latex2png.PNG,
-		BackgroundColor:  color.RGBA{R: 54, G: 57, B: 62, A: 255},
-		ForegroundColor:  color.White,
+		BackgroundColor:  bgColor,
+		ForegroundColor:  fgColor,
 		ImageDPI:         300,
 	})
 
 	if err != nil {
 		utils.SendDebug("commands/latex.go - Error while compiling latex")
-		resp.SetMessage("Error while compiling latex")
-		err = resp.Send()
+		err = resp.SetMessage("Error while compiling latex").Send()
 		if err != nil {
-			utils.SendAlert("commands/latex.go - Sending error", err.Error())
+			utils.SendAlert("commands/latex.go - Sending latex error", err.Error())
+		}
+		return
+	}
+
+	latexImage, err := png.Decode(file)
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Error while decoding dvipng output image", err.Error())
+		err = resp.
+			SetMessage("An error occurred while running this command. Try again later, or contact a bot developer").
+			Send()
+		if err != nil {
+			utils.SendAlert("commands/latex.go - Sending decoding error", err.Error())
+		}
+		return
+	}
+	_ = file.Close()
+
+	output := new(bytes.Buffer)
+	err = png.Encode(output, img.Pad(latexImage, 5+int(math.Ceil(float64(latexImage.Bounds().Dx())*(1./100.))), bgColor))
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Error while encoding padded image", err.Error())
+		err = resp.
+			SetMessage("An error occurred while running this command. Try again later, or contact a bot developer").
+			Send()
+		if err != nil {
+			utils.SendAlert("commands/latex.go - Sending encoding error", err.Error())
 		}
 		return
 	}
@@ -51,13 +85,11 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err = resp.AddFile(&discordgo.File{
 		Name:        "generated_latex.png",
 		ContentType: "image/png",
-		Reader:      file,
+		Reader:      output,
 	}).IsEdit().Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
 	}
-
-	_ = file.Close()
 }
 
 func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, _ utils.OptionMap, _ *utils.ResponseBuilder) {
