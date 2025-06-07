@@ -1,13 +1,19 @@
 package commands
 
 import (
+	"bytes"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/libs/img"
 	"github.com/nyttikord/nerdkord/libs/latex2png"
 	"image/color"
 	"image/png"
-	"os"
+	"math"
+)
+
+var (
+	bgColor = color.RGBA{R: 54, G: 57, B: 62, A: 255}
+	fgColor = color.White
 )
 
 func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -36,8 +42,8 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		PreambleFilePath: "config/defaultPreamble.tex",
 		AddBeginDocument: true,
 		OutputFormat:     latex2png.PNG,
-		BackgroundColor:  color.RGBA{R: 54, G: 57, B: 62, A: 255},
-		ForegroundColor:  color.White,
+		BackgroundColor:  bgColor,
+		ForegroundColor:  fgColor,
 		ImageDPI:         300,
 	})
 
@@ -61,11 +67,11 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-	name := file.Name()
 	_ = file.Close()
 
 	output, err := os.Create(name)
 	err = png.Encode(output, img.Pad(latexImage, 5))
+	output := new(bytes.Buffer)
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Error while encoding padded image", err.Error())
 		err = resp.
@@ -85,8 +91,6 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
 	}
-
-	_ = output.Close()
 }
 
 func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, _ utils.OptionMap, _ *utils.ResponseBuilder) {
