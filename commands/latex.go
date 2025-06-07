@@ -69,9 +69,8 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	_ = file.Close()
 
-	output, err := os.Create(name)
-	err = png.Encode(output, img.Pad(latexImage, 5))
 	output := new(bytes.Buffer)
+	err = png.Encode(output, img.Pad(latexImage, 5+int(math.Ceil(float64(latexImage.Bounds().Dx())*(1./100.))), bgColor))
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Error while encoding padded image", err.Error())
 		err = resp.
