@@ -106,5 +106,4 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 	}
 
 	return os.RemoveAll(tempDir)
-
 }
