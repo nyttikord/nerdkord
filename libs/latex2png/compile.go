@@ -1,20 +1,27 @@
 package latex2png
 
 import (
+	"github.com/anhgelus/gokord/utils"
+	"io"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 )
 
-func Compile(latex string, opt *Options) (*os.File, error) {
+func Compile(output io.Writer, latex string, opt *Options) error {
 	preambleFile, err := os.Open(opt.PreambleFilePath)
 	defer func(f *os.File) {
+		name := f.Name()
 		_ = f.Close()
+		err = os.Remove(name)
+		if err != nil {
+			utils.SendAlert("latex2png/compile.go - Removing preamble file", err.Error())
+		}
 	}(preambleFile)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if opt.AddBeginDocument {
@@ -31,20 +38,25 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 
 	f, err := os.CreateTemp(tempDir, "nerdkord_*.tex")
 	defer func(f *os.File) {
+		name := f.Name()
 		_ = f.Close()
+		err = os.Remove(name)
+		if err != nil {
+			utils.SendAlert("latex2png/compile.go - Removing temporary file", err.Error())
+		}
 	}(f)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	_, err = preambleFile.WriteTo(f)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	_, err = f.WriteString(latex)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	cmd := exec.Command(
@@ -55,11 +67,11 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 	)
 	err = cmd.Start()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = cmd.Wait()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	bg := formatColor(opt.BackgroundColor)
@@ -79,12 +91,27 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 		strings.Split(f.Name(), ".")[0]+".png",
 		strings.Split(f.Name(), ".")[0]+".dvi",
 	)
+
 	err = cmd.Start()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	// Ignore this error because it is triggered everytime
 	_ = cmd.Wait()
 
-	return os.Open(strings.Split(f.Name(), ".")[0] + ".png")
+	outputFile, err := os.Open(strings.Split(f.Name(), ".")[0] + ".png")
+	defer func(f *os.File) {
+		name := f.Name()
+		_ = f.Close()
+		err = os.Remove(name)
+		if err != nil {
+			utils.SendAlert("latex2png/compile.go - Removing temporary file", err.Error())
+		}
+	}(outputFile)
+	if err != nil {
+		return err
+	}
+
+	_, err = outputFile.WriteTo(output)
+	return nil
 }
