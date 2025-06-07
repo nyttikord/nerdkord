@@ -3,8 +3,11 @@ package commands
 import (
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
+	"github.com/nyttikord/nerdkord/libs/img"
 	"github.com/nyttikord/nerdkord/libs/latex2png"
 	"image/color"
+	"image/png"
+	"os"
 )
 
 func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -40,10 +43,36 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if err != nil {
 		utils.SendDebug("commands/latex.go - Error while compiling latex")
-		resp.SetMessage("Error while compiling latex")
-		err = resp.Send()
+		err = resp.SetMessage("Error while compiling latex").Send()
 		if err != nil {
-			utils.SendAlert("commands/latex.go - Sending error", err.Error())
+			utils.SendAlert("commands/latex.go - Sending latex error", err.Error())
+		}
+		return
+	}
+
+	latexImage, err := png.Decode(file)
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Error while decoding dvipng output image", err.Error())
+		err = resp.
+			SetMessage("An error occurred while running this command. Try again later, or contact a bot developer").
+			Send()
+		if err != nil {
+			utils.SendAlert("commands/latex.go - Sending decoding error", err.Error())
+		}
+		return
+	}
+	name := file.Name()
+	_ = file.Close()
+
+	output, err := os.Create(name)
+	err = png.Encode(output, img.Pad(latexImage, 5))
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Error while encoding padded image", err.Error())
+		err = resp.
+			SetMessage("An error occurred while running this command. Try again later, or contact a bot developer").
+			Send()
+		if err != nil {
+			utils.SendAlert("commands/latex.go - Sending encoding error", err.Error())
 		}
 		return
 	}
@@ -51,13 +80,13 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err = resp.AddFile(&discordgo.File{
 		Name:        "generated_latex.png",
 		ContentType: "image/png",
-		Reader:      file,
+		Reader:      output,
 	}).IsEdit().Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
 	}
 
-	_ = file.Close()
+	_ = output.Close()
 }
 
 func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, _ utils.OptionMap, _ *utils.ResponseBuilder) {

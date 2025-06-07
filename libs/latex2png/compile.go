@@ -28,7 +28,7 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 		tempDir = os.TempDir()
 	}
 
-	f, err := os.CreateTemp(tempDir, "*.tex")
+	f, err := os.CreateTemp(tempDir, "nerdkord_*.tex")
 	defer func(f *os.File) {
 		_ = f.Close()
 	}(f)
