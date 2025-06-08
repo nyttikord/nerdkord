@@ -3,7 +3,6 @@ package latex2png
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -23,25 +22,11 @@ type PreprocessingOptions struct {
 }
 
 var (
-	ErrPreprocessor              = errors.New("Preprocessing error :")
+	ErrPreprocessor              = errors.New("Preprocessing error:")
 	ErrCantRedefineDocumentClass = errors.New("cannot redefine documentclass")
+	ErrForbiddenCommand          = errors.New("forbidden command")
+	ErrCmdWithoutBeginDocument   = errors.New("command without `\\begin{document}`")
 )
-
-type ErrForbiddenCommand struct {
-	cmd string
-}
-
-func (f ErrForbiddenCommand) Error() string {
-	return fmt.Sprintf("`\\%s` command is forbidden", f.cmd)
-}
-
-type ErrCmdWithoutBeginDocument struct {
-	cmd string
-}
-
-func (f ErrCmdWithoutBeginDocument) Error() string {
-	return fmt.Sprintf("can't use `\\%s` command without `\\begin{document}`", f.cmd)
-}
 
 func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, error) {
 	var err error = nil
@@ -55,7 +40,7 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 
 	for _, cmd := range opt.ForbiddenCommands {
 		if strings.Contains(input, "\\"+cmd) {
-			err = errors.Join(err, ErrForbiddenCommand{cmd: cmd})
+			err = errors.Join(err, ErrForbiddenCommand, errors.New("    command `\\"+cmd+"` is forbidden"))
 		}
 	}
 
@@ -63,7 +48,7 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 	if !beginReg.MatchString(input) {
 		for _, cmd := range opt.CommandsBeforeBeginDocument {
 			if strings.Contains(input, "\\"+cmd) {
-				err = errors.Join(err, ErrCmdWithoutBeginDocument{cmd: cmd})
+				err = errors.Join(err, ErrCmdWithoutBeginDocument, errors.New("    can't use `\\"+cmd+"` without `\\begin{document}`"))
 			}
 		}
 

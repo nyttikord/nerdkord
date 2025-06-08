@@ -26,7 +26,7 @@ func TestPreprocess(t *testing.T) {
 		ForbiddenCommands: []string{"include"},
 		PreambleFile:      "../../config/defaultPreamble.tex"},
 	)
-	if !errors.Is(err, ErrForbiddenCommand{cmd: "include"}) {
+	if !errors.Is(err, ErrForbiddenCommand) {
 		t.Error("should raise a ForbiddenCommand error")
 	}
 
@@ -35,7 +35,7 @@ func TestPreprocess(t *testing.T) {
 		CommandsBeforeBeginDocument: []string{"usepackage"},
 		PreambleFile:                "../../config/defaultPreamble.tex",
 	})
-	if !errors.Is(err, ErrCmdWithoutBeginDocument{cmd: "usepackage"}) {
+	if !errors.Is(err, ErrCmdWithoutBeginDocument) {
 		t.Error("should raise a CmdWithoutBeginDocument error")
 	}
 }
