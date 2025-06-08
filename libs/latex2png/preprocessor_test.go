@@ -8,7 +8,7 @@ import (
 func TestPreprocess(t *testing.T) {
 	t.Log("testing empty string")
 	res, err := Preprocess("", &PreprocessingOptions{PreambleFile: "../../config/default.tex"})
-	expected := "\\documentclass{standalone}\n\n\\begin{document}\n\\begin{minipage}{16cm}\n\n\\end{minipage}\n\\end{document}\n"
+	expected := "\\documentclass{standalone}\n\n\\begin{document}\n\\begin{minipage}{16cm}\n\n\\end{minipage}\n\\end{document}\n\n"
 	if err != nil {
 		t.Errorf("got error %s", err.Error())
 	} else if res.Value.String() != expected {
