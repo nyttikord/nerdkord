@@ -1,6 +1,7 @@
 package latex2png
 
 import (
+	"github.com/anhgelus/gokord/utils"
 	"os"
 	"os/exec"
 	"strconv"
@@ -8,18 +9,13 @@ import (
 )
 
 func Compile(latex string, opt *Options) (*os.File, error) {
-	preambleFile, err := os.Open(opt.PreambleFilePath)
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(preambleFile)
 
+	res, err := Preprocess(latex, opt.PreprocessingOptions)
 	if err != nil {
 		return nil, err
 	}
-
-	if opt.AddBeginDocument {
-		// Minipage environment forces a maximal width
-		latex = "\\begin{document}\n\\begin{minipage}{16cm}\n" + latex + "\\end{minipage}\n\\end{document}"
+	if res.Debug != nil {
+		utils.SendDebug("Latex preprocessing debug:\n" + res.Debug.Error())
 	}
 
 	var tempDir string
@@ -37,12 +33,7 @@ func Compile(latex string, opt *Options) (*os.File, error) {
 		return nil, err
 	}
 
-	_, err = preambleFile.WriteTo(f)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = f.WriteString(latex)
+	_, err = res.Value.WriteTo(f)
 	if err != nil {
 		return nil, err
 	}

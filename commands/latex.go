@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bytes"
+	"errors"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/libs/img"
@@ -37,17 +38,29 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	latexSource := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 
 	file, err := latex2png.Compile(latexSource, &latex2png.Options{
-		LatexBinary:      "latex",
-		DvipngBinary:     "dvipng",
-		PreambleFilePath: "config/defaultPreamble.tex",
-		AddBeginDocument: true,
-		OutputFormat:     latex2png.PNG,
-		BackgroundColor:  bgColor,
-		ForegroundColor:  fgColor,
-		ImageDPI:         300,
+		LatexBinary:     "latex",
+		DvipngBinary:    "dvipng",
+		OutputFormat:    latex2png.PNG,
+		BackgroundColor: bgColor,
+		ForegroundColor: fgColor,
+		ImageDPI:        300,
+		PreprocessingOptions: latex2png.PreprocessingOptions{
+			ForbiddenCommands:           []string{"include", "import"},
+			CommandsBeforeBeginDocument: []string{"usepackage"},
+			PreambleFile:                "config/defaultPreamble.tex",
+		},
 	})
 
 	if err != nil {
+		if errors.Is(err, latex2png.PreprocessorError{}) {
+			utils.SendDebug("commands.latex.go - Preprocessing error")
+			err = resp.SetMessage("```\n" + err.Error() + "\n```").Send()
+			if err != nil {
+				utils.SendAlert("commands/latex.go - Sending preprocessing error", err.Error())
+			}
+			return
+		}
+
 		utils.SendDebug("commands/latex.go - Error while compiling latex")
 		err = resp.SetMessage("Error while compiling latex").Send()
 		if err != nil {
