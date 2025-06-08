@@ -18,11 +18,12 @@ type PreprocessingOptions struct {
 	// `documentclass` is forbidden by default
 	ForbiddenCommands           []string
 	CommandsBeforeBeginDocument []string
-	PreambleFile                string
+	TemplateFile                string
+	DefaultPreamble             string
 }
 
 var (
-	ErrPreprocessor              = errors.New("Preprocessing error:")
+	ErrPreprocessor              = errors.New("preprocessing error")
 	ErrCantRedefineDocumentClass = errors.New("cannot redefine documentclass")
 	ErrForbiddenCommand          = errors.New("forbidden command")
 	ErrCmdWithoutBeginDocument   = errors.New("command without `\\begin{document}`")
@@ -60,6 +61,7 @@ func Preprocess(input string, opt *PreprocessingOptions) (*PreprocessingResult, 
 			}
 		}
 
+		data.Preamble = LatexCfg.Preamble
 		data.Document = input
 	} else {
 		endReg := regexp.MustCompile(`\\end\s*{document}`)
@@ -72,7 +74,7 @@ func Preprocess(input string, opt *PreprocessingOptions) (*PreprocessingResult, 
 		data.After = input[endPos[0]:]
 	}
 
-	t, e := template.ParseFiles(opt.PreambleFile)
+	t, e := template.ParseFiles(opt.TemplateFile)
 	if e != nil {
 		return nil, errors.Join(err, e)
 	}

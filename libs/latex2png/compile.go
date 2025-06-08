@@ -9,6 +9,19 @@ import (
 	"strings"
 )
 
+type LaTeXConfig struct {
+	Preamble string `toml:"preamble"`
+}
+
+func (c *LaTeXConfig) SetDefaultValues() {
+	c.Preamble = `\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{lipsum}`
+}
+
+var LatexCfg = LaTeXConfig{}
+
 func Compile(output io.Writer, latex string, opt *Options) error {
 	res, err := Preprocess(latex, opt.PreprocessingOptions)
 	if err != nil {

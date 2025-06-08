@@ -6,6 +6,7 @@ import (
 	"github.com/anhgelus/gokord"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/commands"
+	"github.com/nyttikord/nerdkord/libs/latex2png"
 )
 
 var (
@@ -26,7 +27,13 @@ func init() {
 func main() {
 	flag.Parse()
 	gokord.UseRedis = false
-	err := gokord.SetupConfigs(&Config{}, nil)
+	err := gokord.SetupConfigs(&Config{}, []*gokord.ConfigInfo{
+		{
+			Cfg:           &latex2png.LatexCfg,
+			Name:          "latex",
+			DefaultValues: latex2png.LatexCfg.SetDefaultValues,
+		},
+	})
 	if err != nil {
 		panic(err)
 	}
