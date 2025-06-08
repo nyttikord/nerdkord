@@ -54,7 +54,8 @@ func Preprocess(input string, opt *PreprocessingOptions) (*PreprocessingResult, 
 	data := templateData{}
 
 	beginReg := regexp.MustCompile(`\\begin\s*{document}`)
-	if !beginReg.MatchString(input) {
+	beginPos := beginReg.FindStringIndex(input)
+	if beginPos == nil {
 		for _, cmd := range opt.CommandsBeforeBeginDocument {
 			if strings.Contains(input, `\`+cmd) {
 				err = errors.Join(err, ErrCmdWithoutBeginDocument, errors.New("    can't use `\\"+cmd+"` without `\\begin{document}`"))
@@ -65,7 +66,6 @@ func Preprocess(input string, opt *PreprocessingOptions) (*PreprocessingResult, 
 	} else {
 		endReg := regexp.MustCompile(`\\end\s*{document}`)
 
-		beginPos := beginReg.FindStringIndex(input)
 		endPos := endReg.FindStringIndex(input)
 
 		data.Preamble = input[:beginPos[1]]
