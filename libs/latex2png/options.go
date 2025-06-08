@@ -28,7 +28,7 @@ type Options struct {
 	// Default : 100
 	ImageDPI int
 
-	PreprocessingOptions PreprocessingOptions
+	PreprocessingOptions *PreprocessingOptions
 }
 
 func formatColor(c color.Color) string {

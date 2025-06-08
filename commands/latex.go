@@ -45,7 +45,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		BackgroundColor: bgColor,
 		ForegroundColor: fgColor,
 		ImageDPI:        300,
-		PreprocessingOptions: latex2png.PreprocessingOptions{
+		PreprocessingOptions: &latex2png.PreprocessingOptions{
 			ForbiddenCommands:           []string{"include", "import"},
 			CommandsBeforeBeginDocument: []string{"usepackage"},
 			PreambleFile:                "config/defaultPreamble.tex",

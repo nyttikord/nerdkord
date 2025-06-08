@@ -52,7 +52,7 @@ func (f CmdWithoutBeginDocument) Error() string {
 	return fmt.Sprintf("can't use `\\%s` command without `\\begin{document}`", f.cmd)
 }
 
-func Preprocess(input string, opt PreprocessingOptions) (PreprocessingResult, error) {
+func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, error) {
 	var err error = nil
 	var debug error = nil
 
