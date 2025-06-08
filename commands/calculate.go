@@ -8,7 +8,7 @@ import (
 )
 import "github.com/nyttikord/gomath"
 
-func Calculate(s *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
+func Calculate(_ *discordgo.Session, _ *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
 	mathExprOpt, ok := optMap["expression"]
 	resp.IsEphemeral()
 

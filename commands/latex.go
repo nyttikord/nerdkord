@@ -17,6 +17,10 @@ var (
 	fgColor = color.White
 )
 
+const (
+	LaTeXModalID = "latex_modal"
+)
+
 func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type != discordgo.InteractionModalSubmit {
 		return
@@ -30,7 +34,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	data := i.ModalSubmitData()
-	if data.CustomID != "latex_modal" {
+	if data.CustomID != LaTeXModalID {
 		utils.SendDebug("commands/latex.go - Unknown modal ID")
 		return
 	}
@@ -105,29 +109,20 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, _ utils.OptionMap, _ *utils.ResponseBuilder) {
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseModal,
-		Data: &discordgo.InteractionResponseData{
-			CustomID: "latex_modal",
-			Title:    "Latex compiler",
-			Components: []discordgo.MessageComponent{
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.TextInput{
-							CustomID:    "source",
-							Label:       "Source",
-							Style:       discordgo.TextInputParagraph,
-							Placeholder: "Did you know $1 + 1 = 2$ ?",
-							Required:    true,
-							MinLength:   0,
-							MaxLength:   4000,
-						},
-					},
-				},
+func Latex(_ *discordgo.Session, _ *discordgo.InteractionCreate, _ utils.OptionMap, resp *utils.ResponseBuilder) {
+	err := resp.SetCustomID(LaTeXModalID).
+		SetTitle("LaTeX compiler").
+		AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+			discordgo.TextInput{
+				CustomID:    "source",
+				Label:       "Source",
+				Style:       discordgo.TextInputParagraph,
+				Placeholder: "Did you know $1 + 1 = 2$ ?",
+				Required:    true,
+				MinLength:   0,
+				MaxLength:   4000,
 			},
-		},
-	})
+		}}).Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending modal", err.Error())
 	}
