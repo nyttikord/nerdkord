@@ -76,8 +76,8 @@ func Preprocess(input string, opt PreprocessingOptions) (PreprocessingResult, er
 			}
 		}
 
-		debug = errors.Join(debug, errors.New("inserting `\\begin{document}` at input start"))
-		debug = errors.Join(debug, errors.New("inserting `\\end{document} at the end of input"))
+		debug = errors.Join(debug, errors.New("inserting `\\begin{document}\\begin{minipage}{16cm}` at input start"))
+		debug = errors.Join(debug, errors.New("inserting `\\end{minipage}\\end{document}` at the end of input"))
 		input = "\\begin{document}\n\\begin{minipage}{16cm}\n" + input + "\n\\end{minipage}\n\\end{document}"
 	} else {
 		endReg, _ := regexp.Compile("\\\\end\\s*{document}")
@@ -89,6 +89,9 @@ func Preprocess(input string, opt PreprocessingOptions) (PreprocessingResult, er
 			input[beginPos[1]:endPos[0]] +
 			"\n\\end{minipage}\n" +
 			input[endPos[0]:]
+
+		debug = errors.Join(debug, errors.New("inserting `\\begin{minipage}{16cm}` after begin document"))
+		debug = errors.Join(debug, errors.New("inserting `\\end{minipage}` before end document"))
 	}
 
 	preambleFile, e := os.Open(opt.PreambleFile)
