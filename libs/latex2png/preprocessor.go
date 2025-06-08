@@ -3,7 +3,7 @@ package latex2png
 import (
 	"bytes"
 	"errors"
-	"os"
+	"html/template"
 	"regexp"
 	"strings"
 )
@@ -28,7 +28,13 @@ var (
 	ErrCmdWithoutBeginDocument   = errors.New("command without `\\begin{document}`")
 )
 
-func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, error) {
+type templateData struct {
+	Preamble string
+	Document string
+	After    string
+}
+
+func Preprocess(input string, opt *PreprocessingOptions) (*PreprocessingResult, error) {
 	var err error = nil
 	var debug error = nil
 
@@ -44,6 +50,8 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 		}
 	}
 
+	data := templateData{}
+
 	beginReg := regexp.MustCompile(`\\begin\s*{document}`)
 	if !beginReg.MatchString(input) {
 		for _, cmd := range opt.CommandsBeforeBeginDocument {
@@ -52,45 +60,30 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 			}
 		}
 
-		debug = errors.Join(debug, errors.New("inserting `\\begin{document}\\begin{minipage}{16cm}` at input start"))
-		debug = errors.Join(debug, errors.New("inserting `\\end{minipage}\\end{document}` at the end of input"))
-		input = "\\begin{document}\n\\begin{minipage}{16cm}\n" + input + "\n\\end{minipage}\n\\end{document}"
+		data.Document = input
 	} else {
 		endReg := regexp.MustCompile(`\\end\s*{document}`)
 
 		beginPos := beginReg.FindStringIndex(input)
 		endPos := endReg.FindStringIndex(input)
-		input = input[:beginPos[1]] +
-			"\n\\begin{minipage}{16cm}\n" +
-			input[beginPos[1]:endPos[0]] +
-			"\n\\end{minipage}\n" +
-			input[endPos[0]:]
 
-		debug = errors.Join(debug, errors.New("inserting `\\begin{minipage}{16cm}` after begin document"))
-		debug = errors.Join(debug, errors.New("inserting `\\end{minipage}` before end document"))
+		data.Preamble = input[:beginPos[1]]
+		data.Document = input[beginPos[1]:endPos[0]]
+		data.After = input[endPos[0]:]
 	}
 
-	preambleFile, e := os.Open(opt.PreambleFile)
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(preambleFile)
-
+	t, e := template.ParseFiles(opt.PreambleFile)
 	if e != nil {
-		err = errors.Join(err, e)
-	} else {
-		debug = errors.Join(debug, errors.New("writing preamble content to buffer"))
-		_, e := preambleFile.WriteTo(res)
-		if e != nil {
-			err = errors.Join(err, e)
-		}
+		return nil, errors.Join(err, e)
 	}
-
-	debug = errors.Join(debug, errors.New("writing input to buffer"))
-	res.WriteString(input)
+	e = t.Execute(res, data)
+	if e != nil {
+		return nil, errors.Join(err, e)
+	}
 
 	if err != nil {
 		err = errors.Join(ErrPreprocessor, err)
 	}
 
-	return PreprocessingResult{Value: res, Debug: debug}, err
+	return &PreprocessingResult{Value: res, Debug: debug}, err
 }
