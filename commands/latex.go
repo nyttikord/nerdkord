@@ -37,6 +37,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	latexSource := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 
+  file := new(bytes.Buffer)
 	file, err := latex2png.Compile(latexSource, &latex2png.Options{
 		LatexBinary:     "latex",
 		DvipngBinary:    "dvipng",
@@ -80,7 +81,6 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-	_ = file.Close()
 
 	output := new(bytes.Buffer)
 	err = png.Encode(output, img.Pad(latexImage, 5+int(math.Ceil(float64(latexImage.Bounds().Dx())*(1./100.))), bgColor))
