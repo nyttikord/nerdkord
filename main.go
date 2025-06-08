@@ -63,6 +63,9 @@ func main() {
 			"The number of digits you want. Default : 6")).
 		SetHandler(commands.Calculate)
 
+	meCmd := gokord.NewCommand("profile", "Show and edit your profile").
+		SetHandler(commands.Profile)
+
 	bot := gokord.Bot{
 		Token: token,
 		Status: []*gokord.Status{
@@ -80,9 +83,7 @@ func main() {
 			},
 		},
 		Commands: []gokord.CommandBuilder{
-			latexCmd,
-			latexifyCmd,
-			calculateCmd,
+			latexCmd, latexifyCmd, calculateCmd, meCmd,
 		},
 		AfterInit:   afterInit,
 		Innovations: innovations,
