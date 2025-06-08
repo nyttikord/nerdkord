@@ -27,6 +27,12 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	submitData := i.ModalSubmitData()
+	if submitData.CustomID != LaTeXModalID {
+		utils.SendDebug("commands/latex.go - not a latex modal ID")
+		return
+	}
+
 	resp := utils.NewResponseBuilder(s, i).IsDeferred()
 	err := resp.Send()
 	if err != nil {
@@ -34,12 +40,6 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	resp.IsEphemeral()
-
-	submitData := i.ModalSubmitData()
-	if submitData.CustomID != LaTeXModalID {
-		utils.SendDebug("commands/latex.go - Unknown modal ID")
-		return
-	}
 
 	nerd, err := data.GetNerd(i.User.ID)
 	if err != nil {
