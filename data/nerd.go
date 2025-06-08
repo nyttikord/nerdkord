@@ -9,12 +9,12 @@ type Nerd struct {
 }
 
 func GetNerd(id string) (*Nerd, error) {
-	n := &Nerd{}
+	n := Nerd{}
 	n.DiscordID = id
 	if err := n.Load(); err != nil {
 		return nil, err
 	}
-	return n, nil
+	return &n, nil
 }
 
 func (n *Nerd) Load() error {

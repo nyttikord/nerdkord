@@ -41,9 +41,16 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	resp.IsEphemeral()
 
-	nerd, err := data.GetNerd(i.User.ID)
+	var u *discordgo.User
+	if i.User == nil {
+		u = i.Member.User
+	} else {
+		u = i.User
+	}
+
+	nerd, err := data.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Getting nerd", err.Error(), "discord_id", i.User.ID)
+		utils.SendAlert("commands/latex.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your profile. Please report the bug.").Send(); err != nil {
 			utils.SendAlert("commands/latex.go - Sending error getting nerd", err.Error())
 		}

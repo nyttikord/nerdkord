@@ -36,7 +36,13 @@ func OnProfileButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}}).Send()
 	if err != nil {
-		utils.SendAlert("profile.go - Sending modal to edit preamble", err.Error(), "discord_id", i.User.ID)
+		var u *discordgo.User
+		if i.User == nil {
+			u = i.Member.User
+		} else {
+			u = i.User
+		}
+		utils.SendAlert("profile.go - Sending modal to edit preamble", err.Error(), "discord_id", u.ID)
 	}
 }
 
@@ -50,9 +56,15 @@ func OnProfileModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
-	nerd, err := data.GetNerd(i.User.ID)
+	var u *discordgo.User
+	if i.User == nil {
+		u = i.Member.User
+	} else {
+		u = i.User
+	}
+	nerd, err := data.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Getting nerd", err.Error(), "discord_id", i.User.ID)
+		utils.SendAlert("commands/latex.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your profile. Please report the bug.").Send(); err != nil {
 			utils.SendAlert("commands/latex.go - Sending error getting nerd", err.Error())
 		}
@@ -62,7 +74,7 @@ func OnProfileModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	nerd.Preamble = submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 	err = nerd.Save()
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Saving preamble", err.Error(), "discord_id", i.User.ID)
+		utils.SendAlert("commands/latex.go - Saving preamble", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while saving your profile. Please report the bug.").Send(); err != nil {
 			utils.SendAlert("commands/latex.go - Sending error getting nerd", err.Error())
 		}
@@ -75,11 +87,17 @@ func OnProfileModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func Profile(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
 	resp.IsEphemeral()
-	nerd, err := data.GetNerd(i.User.ID)
+	var u *discordgo.User
+	if i.User == nil {
+		u = i.Member.User
+	} else {
+		u = i.User
+	}
+	nerd, err := data.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("profile.go - Getting nerd", err.Error(), "discord_id", i.User.ID)
+		utils.SendAlert("profile.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your profile. Please report.").Send(); err != nil {
-			utils.SendAlert("profile.go - Getting nerd error", err.Error(), "discord_id", i.User.ID)
+			utils.SendAlert("profile.go - Getting nerd error", err.Error(), "discord_id", u.ID)
 		}
 		return
 	}
@@ -87,7 +105,7 @@ func Profile(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.
 		nerd.Preamble = "Default one"
 	}
 	err = resp.AddEmbed(&discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("%s's nerd profile", i.User.Username),
+		Title:       fmt.Sprintf("%s's nerd profile", u.Username),
 		Description: fmt.Sprintf("Your preamble:\n```tex\n%s\n```", nerd.Preamble),
 		Color:       0,
 	}).AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
@@ -101,6 +119,6 @@ func Profile(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.
 	},
 	}).Send()
 	if err != nil {
-		utils.SendAlert("profile.go - Sending profile", err.Error(), "discord_id", i.User.ID)
+		utils.SendAlert("profile.go - Sending profile", err.Error(), "discord_id", u.ID)
 	}
 }
