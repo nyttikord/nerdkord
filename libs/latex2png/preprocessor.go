@@ -19,7 +19,6 @@ type PreprocessingOptions struct {
 	ForbiddenCommands           []string
 	CommandsBeforeBeginDocument []string
 	TemplateFile                string
-	DefaultPreamble             string
 }
 
 var (
@@ -61,7 +60,6 @@ func Preprocess(input string, opt *PreprocessingOptions) (*PreprocessingResult, 
 			}
 		}
 
-		data.Preamble = LatexCfg.Preamble
 		data.Document = input
 	} else {
 		endReg := regexp.MustCompile(`\\end\s*{document}`)

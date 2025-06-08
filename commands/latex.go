@@ -48,8 +48,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		PreprocessingOptions: &latex2png.PreprocessingOptions{
 			ForbiddenCommands:           []string{"include", "import"},
 			CommandsBeforeBeginDocument: []string{"usepackage"},
-			TemplateFile:                "config/default.tex",
-			DefaultPreamble:             latex2png.LatexCfg.Preamble,
+			TemplateFile:                "config/template.tex",
 		},
 	})
 
