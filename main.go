@@ -6,6 +6,7 @@ import (
 	"github.com/anhgelus/gokord"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/commands"
+	"github.com/nyttikord/nerdkord/data"
 )
 
 var (
@@ -31,7 +32,7 @@ func main() {
 		panic(err)
 	}
 
-	err = gokord.DB.AutoMigrate(&Nerd{})
+	err = gokord.DB.AutoMigrate(&data.Nerd{})
 	if err != nil {
 		panic(err)
 	}

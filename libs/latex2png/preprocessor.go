@@ -19,6 +19,7 @@ type PreprocessingOptions struct {
 	ForbiddenCommands           []string
 	CommandsBeforeBeginDocument []string
 	TemplateFile                string
+	UserPreamble                string
 }
 
 var (
@@ -59,7 +60,7 @@ func Preprocess(input string, opt *PreprocessingOptions) (*PreprocessingResult, 
 				err = errors.Join(err, ErrCmdWithoutBeginDocument, errors.New("    can't use `\\"+cmd+"` without `\\begin{document}`"))
 			}
 		}
-
+		data.Preamble = opt.UserPreamble
 		data.Document = input
 	} else {
 		endReg := regexp.MustCompile(`\\end\s*{document}`)
