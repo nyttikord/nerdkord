@@ -17,7 +17,7 @@ func TestPreprocess(t *testing.T) {
 
 	t.Log("testing redefining documentclass")
 	_, err = Preprocess("\\documentclass {article}", &PreprocessingOptions{PreambleFile: "../../config/defaultPreamble.tex"})
-	if !errors.Is(err, CantRedefineDocumentclass{}) {
+	if !errors.Is(err, ErrCantRedefineDocumentClass) {
 		t.Errorf("should raise a CantRedefineDocumentclass error")
 	}
 
@@ -26,7 +26,7 @@ func TestPreprocess(t *testing.T) {
 		ForbiddenCommands: []string{"include"},
 		PreambleFile:      "../../config/defaultPreamble.tex"},
 	)
-	if !errors.Is(err, ForbiddenCommand{cmd: "include"}) {
+	if !errors.Is(err, ErrForbiddenCommand{cmd: "include"}) {
 		t.Error("should raise a ForbiddenCommand error")
 	}
 
@@ -35,7 +35,7 @@ func TestPreprocess(t *testing.T) {
 		CommandsBeforeBeginDocument: []string{"usepackage"},
 		PreambleFile:                "../../config/defaultPreamble.tex",
 	})
-	if !errors.Is(err, CmdWithoutBeginDocument{cmd: "usepackage"}) {
+	if !errors.Is(err, ErrCmdWithoutBeginDocument{cmd: "usepackage"}) {
 		t.Error("should raise a CmdWithoutBeginDocument error")
 	}
 }

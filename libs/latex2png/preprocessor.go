@@ -22,33 +22,24 @@ type PreprocessingOptions struct {
 	PreambleFile                string
 }
 
-type PreprocessorError struct {
-}
+var (
+	ErrPreprocessor              = errors.New("Preprocessing error :")
+	ErrCantRedefineDocumentClass = errors.New("cannot redefine documentclass")
+)
 
-func (_ PreprocessorError) Error() string {
-	return "Preprocessing error :"
-}
-
-type CantRedefineDocumentclass struct {
-}
-
-func (_ CantRedefineDocumentclass) Error() string {
-	return "cannot redefine documentclass"
-}
-
-type ForbiddenCommand struct {
+type ErrForbiddenCommand struct {
 	cmd string
 }
 
-func (f ForbiddenCommand) Error() string {
+func (f ErrForbiddenCommand) Error() string {
 	return fmt.Sprintf("`\\%s` command is forbidden", f.cmd)
 }
 
-type CmdWithoutBeginDocument struct {
+type ErrCmdWithoutBeginDocument struct {
 	cmd string
 }
 
-func (f CmdWithoutBeginDocument) Error() string {
+func (f ErrCmdWithoutBeginDocument) Error() string {
 	return fmt.Sprintf("can't use `\\%s` command without `\\begin{document}`", f.cmd)
 }
 
@@ -59,12 +50,12 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 	res := new(bytes.Buffer)
 
 	if strings.Contains(input, "\\documentclass") {
-		err = errors.Join(err, CantRedefineDocumentclass{})
+		err = errors.Join(err, ErrCantRedefineDocumentClass)
 	}
 
 	for _, cmd := range opt.ForbiddenCommands {
 		if strings.Contains(input, "\\"+cmd) {
-			err = errors.Join(err, ForbiddenCommand{cmd: cmd})
+			err = errors.Join(err, ErrForbiddenCommand{cmd: cmd})
 		}
 	}
 
@@ -72,7 +63,7 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 	if !beginReg.MatchString(input) {
 		for _, cmd := range opt.CommandsBeforeBeginDocument {
 			if strings.Contains(input, "\\"+cmd) {
-				err = errors.Join(err, CmdWithoutBeginDocument{cmd: cmd})
+				err = errors.Join(err, ErrCmdWithoutBeginDocument{cmd: cmd})
 			}
 		}
 
@@ -113,7 +104,7 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 	res.WriteString(input)
 
 	if err != nil {
-		err = errors.Join(PreprocessorError{}, err)
+		err = errors.Join(ErrPreprocessor, err)
 	}
 
 	return PreprocessingResult{Value: res, Debug: debug}, err

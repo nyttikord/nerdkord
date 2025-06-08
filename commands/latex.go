@@ -53,7 +53,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
-		if errors.Is(err, latex2png.PreprocessorError{}) {
+		if errors.Is(err, latex2png.ErrPreprocessor) {
 			utils.SendDebug("commands.latex.go - Preprocessing error")
 			err = resp.SetMessage("```\n" + err.Error() + "\n```").Send()
 			if err != nil {
