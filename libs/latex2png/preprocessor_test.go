@@ -8,7 +8,20 @@ import (
 func TestPreprocess(t *testing.T) {
 	t.Log("testing empty string")
 	res, err := Preprocess("", &PreprocessingOptions{TemplateFile: "../../config/template.tex"})
-	expected := "\\documentclass{standalone}\n\n\\begin{document}\n\\begin{minipage}{16cm}\n\n\\end{minipage}\n\\end{document}\n\n"
+	expected := `
+\documentclass{standalone}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{lipsum}
+
+\begin{document}
+\begin{minipage}{16cm}
+
+\end{minipage}
+\end{document}
+`
 	if err != nil {
 		t.Errorf("got error %s", err.Error())
 	} else if res.Value.String() != expected {
