@@ -31,6 +31,11 @@ func main() {
 		panic(err)
 	}
 
+	err = gokord.DB.AutoMigrate(&Nerd{})
+	if err != nil {
+		panic(err)
+	}
+
 	innovations, err := gokord.LoadInnovationFromJson(updatesData)
 	if err != nil {
 		panic(err)
