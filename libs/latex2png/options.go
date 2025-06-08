@@ -17,14 +17,9 @@ type Options struct {
 	LatexBinary  string
 	DvipngBinary string
 
-	PreambleFilePath string
-
 	// The path to the directory to put the temporary files
 	// Default : 'os.TempDir()' if empty
 	TempDir string
-	// Whether to add the '\begin{document}' and end to the latex input
-	// Default : true
-	AddBeginDocument bool
 	// Default : PNG
 	OutputFormat OutputFormat
 	// If alpha is not 0, the color will not be transparent
@@ -32,6 +27,8 @@ type Options struct {
 	ForegroundColor color.Color
 	// Default : 100
 	ImageDPI int
+
+	PreprocessingOptions PreprocessingOptions
 }
 
 func formatColor(c color.Color) string {
