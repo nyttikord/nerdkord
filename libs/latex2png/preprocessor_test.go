@@ -8,11 +8,11 @@ import (
 func TestPreprocess(t *testing.T) {
 	t.Log("testing empty string")
 	res, err := Preprocess("", &PreprocessingOptions{PreambleFile: "../../config/default.tex"})
-	expected := "\\documentclass{standalone}\n\n\\begin{document}\n\\begin{minipage}{16cm}\n\n\\end{minipage}\n\\end{document}"
+	expected := "\\documentclass{standalone}\n\n\\begin{document}\n\\begin{minipage}{16cm}\n\n\\end{minipage}\n\\end{document}\n"
 	if err != nil {
 		t.Errorf("got error %s", err.Error())
 	} else if res.Value.String() != expected {
-		t.Errorf("got %s", res.Value.String())
+		t.Errorf("got %s, want %s", res.Value.String(), expected)
 	}
 
 	t.Log("testing redefining documentclass")
