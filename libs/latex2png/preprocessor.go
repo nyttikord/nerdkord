@@ -34,20 +34,20 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 
 	res := new(bytes.Buffer)
 
-	if strings.Contains(input, "\\documentclass") {
+	if strings.Contains(input, `\documentclass`) {
 		err = errors.Join(err, ErrCantRedefineDocumentClass)
 	}
 
 	for _, cmd := range opt.ForbiddenCommands {
-		if strings.Contains(input, "\\"+cmd) {
+		if strings.Contains(input, `\`+cmd) {
 			err = errors.Join(err, ErrForbiddenCommand, errors.New("    command `\\"+cmd+"` is forbidden"))
 		}
 	}
 
-	beginReg := regexp.MustCompile("\\\\begin\\s*{document}")
+	beginReg := regexp.MustCompile(`\\begin\s*{document}`)
 	if !beginReg.MatchString(input) {
 		for _, cmd := range opt.CommandsBeforeBeginDocument {
-			if strings.Contains(input, "\\"+cmd) {
+			if strings.Contains(input, `\`+cmd) {
 				err = errors.Join(err, ErrCmdWithoutBeginDocument, errors.New("    can't use `\\"+cmd+"` without `\\begin{document}`"))
 			}
 		}
@@ -56,7 +56,7 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 		debug = errors.Join(debug, errors.New("inserting `\\end{minipage}\\end{document}` at the end of input"))
 		input = "\\begin{document}\n\\begin{minipage}{16cm}\n" + input + "\n\\end{minipage}\n\\end{document}"
 	} else {
-		endReg := regexp.MustCompile("\\\\end\\s*{document}")
+		endReg := regexp.MustCompile(`\\end\s*{document}`)
 
 		beginPos := beginReg.FindStringIndex(input)
 		endPos := endReg.FindStringIndex(input)
