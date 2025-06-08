@@ -44,7 +44,7 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 		}
 	}
 
-	beginReg, _ := regexp.Compile("\\\\begin\\s*{document}")
+	beginReg := regexp.MustCompile("\\\\begin\\s*{document}")
 	if !beginReg.MatchString(input) {
 		for _, cmd := range opt.CommandsBeforeBeginDocument {
 			if strings.Contains(input, "\\"+cmd) {
@@ -56,7 +56,7 @@ func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, e
 		debug = errors.Join(debug, errors.New("inserting `\\end{minipage}\\end{document}` at the end of input"))
 		input = "\\begin{document}\n\\begin{minipage}{16cm}\n" + input + "\n\\end{minipage}\n\\end{document}"
 	} else {
-		endReg, _ := regexp.Compile("\\\\end\\s*{document}")
+		endReg := regexp.MustCompile("\\\\end\\s*{document}")
 
 		beginPos := beginReg.FindStringIndex(input)
 		endPos := endReg.FindStringIndex(input)
