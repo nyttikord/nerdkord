@@ -6,6 +6,7 @@ import (
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/data"
+	"github.com/nyttikord/nerdkord/libs/latex2png"
 	"strings"
 	"text/template"
 )
@@ -81,7 +82,28 @@ func OnProfileModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	val := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 	if strings.Contains(val, `\documentclass`) {
 		if err = resp.SetMessage("You can't use `\\documentclass`").Send(); err != nil {
-			utils.SendAlert("commands/profile.go - Sending error getting document class", err.Error())
+			utils.SendAlert("commands/profile.go - Sending error \\documentclass is present", err.Error())
+		}
+		return
+	}
+	if err = resp.IsDeferred().Send(); err != nil {
+		utils.SendAlert("commands/profile.go - Sending deferred", err.Error(), "discord_id", u.ID)
+		return
+	}
+	utils.SendDebug("Checking preamble's validity", "discord_id", u.ID)
+	file := new(bytes.Buffer)
+	err = latex2png.Compile(file, "hey, this code was written by a furry", &latex2png.Options{
+		LatexBinary:          "latex",
+		DvipngBinary:         "dvipng",
+		OutputFormat:         latex2png.PNG,
+		BackgroundColor:      bgColor,
+		ForegroundColor:      fgColor,
+		ImageDPI:             10, // reduce DPI for faster results
+		PreprocessingOptions: defaultPreprocessingOptions,
+	})
+	if err != nil {
+		if err = resp.SetMessage("Your preamble is invalid.").Send(); err != nil {
+			utils.SendAlert("commands/profile.go - Sending invalid preamble", err.Error())
 		}
 		return
 	}
