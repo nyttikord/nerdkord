@@ -1,15 +1,21 @@
 package commands
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/data"
 	"strings"
+	"text/template"
 )
 
 const (
 	EditPreambleID = "edit_preamble"
+)
+
+var (
+	defaultPreamble = ""
 )
 
 func OnProfileButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -74,11 +80,12 @@ func OnProfileModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) 
 
 	val := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 	if strings.Contains(val, `\documentclass`) {
-		if err = resp.SetMessage("You can't use `\\\\documentclass`").Send(); err != nil {
+		if err = resp.SetMessage("You can't use `\\documentclass`").Send(); err != nil {
 			utils.SendAlert("commands/profile.go - Sending error getting document class", err.Error())
 		}
 		return
 	}
+	utils.SendDebug("Updating nerd's preamble", "discord_id", u.ID)
 	nerd.Preamble = val
 	err = nerd.Save()
 	if err != nil {
@@ -93,7 +100,7 @@ func OnProfileModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	}
 }
 
-func Profile(dg *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
+func Profile(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
 	resp.IsEphemeral()
 	var u *discordgo.User
 	if i.User == nil {
@@ -110,7 +117,13 @@ func Profile(dg *discordgo.Session, i *discordgo.InteractionCreate, optMap utils
 		return
 	}
 	if len(nerd.Preamble) == 0 {
-		nerd.Preamble = "Default one"
+		nerd.Preamble, err = getDefaultPreamble()
+		if err != nil {
+			if err = resp.SetMessage("An error occurred. Please report the bug.").Send(); err != nil {
+				utils.SendAlert("commands/profile.go - Sending error occurred while parsing template", err.Error())
+			}
+			return
+		}
 	}
 	err = resp.AddEmbed(&discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s's nerd profile", u.Username),
@@ -128,4 +141,27 @@ func Profile(dg *discordgo.Session, i *discordgo.InteractionCreate, optMap utils
 	if err != nil {
 		utils.SendAlert("commands/profile.go - Sending profile", err.Error(), "discord_id", u.ID)
 	}
+}
+
+func getDefaultPreamble() (string, error) {
+	if len(defaultPreamble) == 0 {
+		t, err := template.ParseFiles(defaultPreprocessingOptions.TemplateFile)
+		if err != nil {
+			utils.SendAlert(
+				"commands/profile.go - Parsing template file", err.Error(),
+				"path", defaultPreprocessingOptions.TemplateFile,
+			)
+		} else {
+			wr := new(bytes.Buffer)
+			err = t.ExecuteTemplate(wr, "defaultPreamble", nil)
+			if err != nil {
+				return "", err
+			}
+			defaultPreamble = wr.String()
+		}
+	}
+	if len(defaultPreamble) == 0 {
+		return "Default one", nil
+	}
+	return defaultPreamble, nil
 }
