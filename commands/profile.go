@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/anhgelus/gokord"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/data"
@@ -42,7 +44,7 @@ func OnProfileButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		} else {
 			u = i.User
 		}
-		utils.SendAlert("profile.go - Sending modal to edit preamble", err.Error(), "discord_id", u.ID)
+		utils.SendAlert("commands/profile.go - Sending modal to edit preamble", err.Error(), "discord_id", u.ID)
 	}
 }
 
@@ -64,9 +66,9 @@ func OnProfileModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	nerd, err := data.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Getting nerd", err.Error(), "discord_id", u.ID)
+		utils.SendAlert("commands/profile.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your profile. Please report the bug.").Send(); err != nil {
-			utils.SendAlert("commands/latex.go - Sending error getting nerd", err.Error())
+			utils.SendAlert("commands/profile.go - Sending error getting nerd", err.Error())
 		}
 		return
 	}
@@ -74,18 +76,18 @@ func OnProfileModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	nerd.Preamble = submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 	err = nerd.Save()
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Saving preamble", err.Error(), "discord_id", u.ID)
+		utils.SendAlert("commands/profile.go - Saving preamble", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while saving your profile. Please report the bug.").Send(); err != nil {
-			utils.SendAlert("commands/latex.go - Sending error getting nerd", err.Error())
+			utils.SendAlert("commands/profile.go - Sending error getting nerd", err.Error())
 		}
 		return
 	}
 	if err = resp.SetMessage("Preamble saved").Send(); err != nil {
-		utils.SendAlert("commands/latex.go - Sending success", err.Error())
+		utils.SendAlert("commands/profile.go - Sending success", err.Error())
 	}
 }
 
-func Profile(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
+func Profile(dg *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
 	resp.IsEphemeral()
 	var u *discordgo.User
 	if i.User == nil {
@@ -95,16 +97,16 @@ func Profile(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.
 	}
 	nerd, err := data.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("profile.go - Getting nerd", err.Error(), "discord_id", u.ID)
+		utils.SendAlert("commands/profile.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your profile. Please report.").Send(); err != nil {
-			utils.SendAlert("profile.go - Getting nerd error", err.Error(), "discord_id", u.ID)
+			utils.SendAlert("commands/profile.go - Getting nerd error", err.Error(), "discord_id", u.ID)
 		}
 		return
 	}
 	if len(nerd.Preamble) == 0 {
 		nerd.Preamble = "Default one"
 	}
-	err = resp.AddEmbed(&discordgo.MessageEmbed{
+	respErr := resp.AddEmbed(&discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s's nerd profile", u.Username),
 		Description: fmt.Sprintf("Your preamble:\n```tex\n%s\n```", nerd.Preamble),
 		Color:       0,
@@ -116,9 +118,35 @@ func Profile(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.
 			Emoji:    nil,
 			CustomID: EditPreambleID,
 		},
-	},
-	}).Send()
-	if err != nil {
-		utils.SendAlert("profile.go - Sending profile", err.Error(), "discord_id", u.ID)
+	}}).Send()
+	if respErr != nil {
+		utils.SendAlert("commands/profile.go - Sending profile", respErr.Error(), "discord_id", u.ID)
+		if gokord.Debug {
+			fmt.Println(respErr.FormatString())
+			r := &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Flags: discordgo.MessageFlagsEphemeral,
+					Components: []discordgo.MessageComponent{
+						discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+							discordgo.Button{
+								Label:    "Edit preamble",
+								Style:    discordgo.PrimaryButton,
+								Disabled: false,
+								Emoji:    nil,
+								CustomID: EditPreambleID,
+							},
+						}},
+					},
+					Embeds: []*discordgo.MessageEmbed{{
+						Title:       fmt.Sprintf("%s's nerd profile", u.Username),
+						Description: fmt.Sprintf("Your preamble:\n```tex\n%s\n```", nerd.Preamble),
+						Color:       0,
+					}},
+				},
+			}
+			b, _ := json.MarshalIndent(r, "", "  ")
+			fmt.Println(string(b))
+		}
 	}
 }

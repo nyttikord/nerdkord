@@ -3,6 +3,8 @@ package commands
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"github.com/anhgelus/gokord"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/data"
@@ -34,9 +36,9 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	resp := utils.NewResponseBuilder(s, i).IsDeferred()
-	err := resp.Send()
-	if err != nil {
-		utils.SendAlert("commands/latex.go - Sending deferred", err.Error())
+	respErr := resp.Send()
+	if respErr != nil {
+		utils.SendAlert("commands/latex.go - Sending deferred", respErr.Error())
 		return
 	}
 	resp.IsEphemeral()
@@ -118,18 +120,22 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err = resp.NotEphemeral().AddFile(&discordgo.File{
+	respErr = resp.NotEphemeral().AddFile(&discordgo.File{
 		Name:        "generated_latex.png",
 		ContentType: "image/png",
 		Reader:      output,
 	}).Send()
-	if err != nil {
-		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
+	if respErr != nil {
+		utils.SendAlert("commands/latex.go - Sending latex", respErr.Error())
+		if gokord.Debug {
+			fmt.Println(respErr.FormatString())
+		}
 	}
 }
 
 func Latex(_ *discordgo.Session, _ *discordgo.InteractionCreate, _ utils.OptionMap, resp *utils.ResponseBuilder) {
 	err := resp.SetCustomID(LaTeXModalID).
+		IsModal().
 		SetTitle("LaTeX compiler").
 		AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
 			discordgo.TextInput{

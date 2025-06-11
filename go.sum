@@ -1,5 +1,11 @@
 github.com/anhgelus/gokord v0.10.1 h1:6p1fuNvJkGTW2K89h24h7/j1WkYhJY8EKKxWwv9aOMg=
 github.com/anhgelus/gokord v0.10.1/go.mod h1:NSepHjTV61LUnuyGgHxEhZNMnWREErGFyOtRYPgdx/E=
+github.com/anhgelus/gokord v0.10.2-0.20250611132854-8306d6141051 h1:ICKz/iogqV2JSvJP4mFJ3JTw4k1BKvMFtoZJ96JBfdk=
+github.com/anhgelus/gokord v0.10.2-0.20250611132854-8306d6141051/go.mod h1:NSepHjTV61LUnuyGgHxEhZNMnWREErGFyOtRYPgdx/E=
+github.com/anhgelus/gokord v0.10.2-0.20250611134936-5623f8b92bc0 h1:Zt/rp/PkhXEfkCj2U/BTR1MAC+1R3MFVnG2JEQXkIxQ=
+github.com/anhgelus/gokord v0.10.2-0.20250611134936-5623f8b92bc0/go.mod h1:NSepHjTV61LUnuyGgHxEhZNMnWREErGFyOtRYPgdx/E=
+github.com/anhgelus/gokord v0.10.2 h1:tRL7y/y09bNNQA3jpoaTTYOYsMxYgpWvj2IgSUUWdaA=
+github.com/anhgelus/gokord v0.10.2/go.mod h1:NSepHjTV61LUnuyGgHxEhZNMnWREErGFyOtRYPgdx/E=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
 github.com/bsm/ginkgo/v2 v2.12.0/go.mod h1:SwYbGRRDovPVboqFv0tPTcG1sN61LM1Z4ARdbAV9g4c=
 github.com/bsm/gomega v1.27.10 h1:yeMWxP2pV2fG3FgAODIY8EiRE3dy0aeFYt4l7wh6yKA=
@@ -25,9 +31,13 @@ github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0
 github.com/pelletier/go-toml/v2 v2.2.4/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
 github.com/redis/go-redis/v9 v9.9.0 h1:URbPQ4xVQSQhZ27WMQVmZSo3uT3pL+4IdHVcYq2nVfM=
 github.com/redis/go-redis/v9 v9.9.0/go.mod h1:huWgSWd8mW6+m0VPhJjSSQ+d6Nh1VICQ6Q5lHuCH/Iw=
+github.com/redis/go-redis/v9 v9.10.0 h1:FxwK3eV8p/CQa0Ch276C7u2d0eNC9kCmAYQ7mCXCzVs=
+github.com/redis/go-redis/v9 v9.10.0/go.mod h1:huWgSWd8mW6+m0VPhJjSSQ+d6Nh1VICQ6Q5lHuCH/Iw=
 golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b/go.mod h1:T9bdIzuCu7OtxOm1hfPfRQxPLYneinmdGuTeoZ9dtd4=
 golang.org/x/crypto v0.38.0 h1:jt+WWG8IZlBnVbomuhg2Mdq0+BBQaHbtqHEFEigjUV8=
 golang.org/x/crypto v0.38.0/go.mod h1:MvrbAqul58NNYPKnOra203SB9vpuZW0e+RRZV+Ggqjw=
+golang.org/x/crypto v0.39.0 h1:SHs+kF4LP+f+p14esP5jAoDpHU8Gu/v9lFRK6IT5imM=
+golang.org/x/crypto v0.39.0/go.mod h1:L+Xg3Wf6HoL4Bn4238Z6ft6KfEpN0tJGo53AAPC632U=
 golang.org/x/net v0.0.0-20210226172049-e18ecbb05110/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.33.0 h1:q3i8TbbEz+JRD9ywIRlyRAQbM0qF7hu24q3teo2hbuw=
