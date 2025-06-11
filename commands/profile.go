@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/anhgelus/gokord"
 	"github.com/anhgelus/gokord/utils"
@@ -82,8 +81,8 @@ func OnProfileModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-	if err = resp.SetMessage("Preamble saved").Send(); err != nil {
-		utils.SendAlert("commands/profile.go - Sending success", err.Error())
+	if errResp := resp.SetMessage("Preamble saved").Send(); errResp != nil {
+		utils.SendAlert("commands/profile.go - Sending success", errResp.Error())
 	}
 }
 
@@ -123,30 +122,6 @@ func Profile(dg *discordgo.Session, i *discordgo.InteractionCreate, optMap utils
 		utils.SendAlert("commands/profile.go - Sending profile", respErr.Error(), "discord_id", u.ID)
 		if gokord.Debug {
 			fmt.Println(respErr.FormatString())
-			r := &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Flags: discordgo.MessageFlagsEphemeral,
-					Components: []discordgo.MessageComponent{
-						discordgo.ActionsRow{Components: []discordgo.MessageComponent{
-							discordgo.Button{
-								Label:    "Edit preamble",
-								Style:    discordgo.PrimaryButton,
-								Disabled: false,
-								Emoji:    nil,
-								CustomID: EditPreambleID,
-							},
-						}},
-					},
-					Embeds: []*discordgo.MessageEmbed{{
-						Title:       fmt.Sprintf("%s's nerd profile", u.Username),
-						Description: fmt.Sprintf("Your preamble:\n```tex\n%s\n```", nerd.Preamble),
-						Color:       0,
-					}},
-				},
-			}
-			b, _ := json.MarshalIndent(r, "", "  ")
-			fmt.Println(string(b))
 		}
 	}
 }
