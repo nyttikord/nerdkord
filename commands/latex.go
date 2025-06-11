@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
+	"github.com/nyttikord/nerdkord/data"
 	"github.com/nyttikord/nerdkord/libs/img"
 	"github.com/nyttikord/nerdkord/libs/latex2png"
 	"image/color"
@@ -15,6 +16,16 @@ import (
 var (
 	bgColor = color.RGBA{R: 54, G: 57, B: 62, A: 255}
 	fgColor = color.White
+
+	defaultPreprocessingOptions = &latex2png.PreprocessingOptions{
+		ForbiddenCommands:           []string{"include", "import"},
+		CommandsBeforeBeginDocument: []string{"usepackage"},
+		TemplateFile:                "config/template.tex",
+	}
+)
+
+const (
+	LaTeXModalID = "latex_modal"
 )
 
 func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -22,34 +33,49 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	resp := utils.NewResponseBuilder(s, i).IsDeferred().IsEphemeral()
+	submitData := i.ModalSubmitData()
+	if submitData.CustomID != LaTeXModalID {
+		utils.SendDebug("commands/latex.go - not a latex modal ID")
+		return
+	}
+
+	resp := utils.NewResponseBuilder(s, i).IsDeferred()
 	err := resp.Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending deferred", err.Error())
 		return
 	}
+	resp.IsEphemeral()
 
-	data := i.ModalSubmitData()
-	if data.CustomID != "latex_modal" {
-		utils.SendDebug("commands/latex.go - Unknown modal ID")
+	var u *discordgo.User
+	if i.User == nil {
+		u = i.Member.User
+	} else {
+		u = i.User
+	}
+
+	nerd, err := data.GetNerd(u.ID)
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Getting nerd", err.Error(), "discord_id", u.ID)
+		if err = resp.SetMessage("Error while getting your profile. Please report the bug.").Send(); err != nil {
+			utils.SendAlert("commands/latex.go - Sending error getting nerd", err.Error())
+		}
 		return
 	}
 
-	latexSource := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
+	latexSource := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 
 	file := new(bytes.Buffer)
+	opt := &*defaultPreprocessingOptions
+	opt.UserPreamble = nerd.Preamble
 	err = latex2png.Compile(file, latexSource, &latex2png.Options{
-		LatexBinary:     "latex",
-		DvipngBinary:    "dvipng",
-		OutputFormat:    latex2png.PNG,
-		BackgroundColor: bgColor,
-		ForegroundColor: fgColor,
-		ImageDPI:        300,
-		PreprocessingOptions: &latex2png.PreprocessingOptions{
-			ForbiddenCommands:           []string{"include", "import"},
-			CommandsBeforeBeginDocument: []string{"usepackage"},
-			PreambleFile:                "config/defaultPreamble.tex",
-		},
+		LatexBinary:          "latex",
+		DvipngBinary:         "dvipng",
+		OutputFormat:         latex2png.PNG,
+		BackgroundColor:      bgColor,
+		ForegroundColor:      fgColor,
+		ImageDPI:             300,
+		PreprocessingOptions: opt,
 	})
 
 	if err != nil {
@@ -95,39 +121,31 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err = resp.AddFile(&discordgo.File{
+	err = resp.NotEphemeral().AddFile(&discordgo.File{
 		Name:        "generated_latex.png",
 		ContentType: "image/png",
 		Reader:      output,
-	}).IsEdit().Send()
+	}).Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
 	}
 }
 
-func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, _ utils.OptionMap, _ *utils.ResponseBuilder) {
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseModal,
-		Data: &discordgo.InteractionResponseData{
-			CustomID: "latex_modal",
-			Title:    "Latex compiler",
-			Components: []discordgo.MessageComponent{
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.TextInput{
-							CustomID:    "source",
-							Label:       "Source",
-							Style:       discordgo.TextInputParagraph,
-							Placeholder: "Did you know $1 + 1 = 2$ ?",
-							Required:    true,
-							MinLength:   0,
-							MaxLength:   4000,
-						},
-					},
-				},
+func Latex(_ *discordgo.Session, _ *discordgo.InteractionCreate, _ utils.OptionMap, resp *utils.ResponseBuilder) {
+	err := resp.SetCustomID(LaTeXModalID).
+		IsModal().
+		SetTitle("LaTeX compiler").
+		AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+			discordgo.TextInput{
+				CustomID:    "source",
+				Label:       "Source",
+				Style:       discordgo.TextInputParagraph,
+				Placeholder: "Did you know $1 + 1 = 2$ ?",
+				Required:    true,
+				MinLength:   0,
+				MaxLength:   4000,
 			},
-		},
-	})
+		}}).Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending modal", err.Error())
 	}

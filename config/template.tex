@@ -1,0 +1,14 @@
+{{define "defaultPreamble" }}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{lipsum}
+{{end}}
+\documentclass{standalone}
+{{ if eq (len .Preamble) 0 }}{{template "defaultPreamble"}}{{else}}{{ .Preamble }}{{end}}
+\begin{document}
+\begin{minipage}{16cm}
+{{ .Document }}
+\end{minipage}
+\end{document}
+{{ .After }}

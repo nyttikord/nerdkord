@@ -6,6 +6,7 @@ import (
 	"github.com/anhgelus/gokord"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/commands"
+	"github.com/nyttikord/nerdkord/data"
 )
 
 var (
@@ -27,6 +28,11 @@ func main() {
 	flag.Parse()
 	gokord.UseRedis = false
 	err := gokord.SetupConfigs(&Config{}, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	err = gokord.DB.AutoMigrate(&data.Nerd{})
 	if err != nil {
 		panic(err)
 	}
@@ -57,6 +63,9 @@ func main() {
 			"The number of digits you want. Default : 6")).
 		SetHandler(commands.Calculate)
 
+	meCmd := gokord.NewCommand("profile", "Show and edit your profile").
+		SetHandler(commands.Profile)
+
 	bot := gokord.Bot{
 		Token: token,
 		Status: []*gokord.Status{
@@ -74,9 +83,7 @@ func main() {
 			},
 		},
 		Commands: []gokord.CommandBuilder{
-			latexCmd,
-			latexifyCmd,
-			calculateCmd,
+			latexCmd, latexifyCmd, calculateCmd, meCmd,
 		},
 		AfterInit:   afterInit,
 		Innovations: innovations,
@@ -88,4 +95,6 @@ func main() {
 
 func afterInit(dg *discordgo.Session) {
 	dg.AddHandler(commands.OnLatexModalSubmit)
+	dg.AddHandler(commands.OnProfileButton)
+	dg.AddHandler(commands.OnProfileModalSubmit)
 }

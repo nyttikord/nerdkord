@@ -3,7 +3,7 @@ package latex2png
 import (
 	"bytes"
 	"errors"
-	"os"
+	"html/template"
 	"regexp"
 	"strings"
 )
@@ -18,79 +18,73 @@ type PreprocessingOptions struct {
 	// `documentclass` is forbidden by default
 	ForbiddenCommands           []string
 	CommandsBeforeBeginDocument []string
-	PreambleFile                string
+	TemplateFile                string
+	UserPreamble                string
 }
 
 var (
-	ErrPreprocessor              = errors.New("Preprocessing error:")
+	ErrPreprocessor              = errors.New("preprocessing error")
 	ErrCantRedefineDocumentClass = errors.New("cannot redefine documentclass")
 	ErrForbiddenCommand          = errors.New("forbidden command")
 	ErrCmdWithoutBeginDocument   = errors.New("command without `\\begin{document}`")
 )
 
-func Preprocess(input string, opt *PreprocessingOptions) (PreprocessingResult, error) {
+type templateData struct {
+	Preamble string
+	Document string
+	After    string
+}
+
+func Preprocess(input string, opt *PreprocessingOptions) (*PreprocessingResult, error) {
 	var err error = nil
 	var debug error = nil
 
 	res := new(bytes.Buffer)
 
-	if strings.Contains(input, "\\documentclass") {
+	if strings.Contains(input, `\documentclass`) {
 		err = errors.Join(err, ErrCantRedefineDocumentClass)
 	}
 
 	for _, cmd := range opt.ForbiddenCommands {
-		if strings.Contains(input, "\\"+cmd) {
+		if strings.Contains(input, `\`+cmd) {
 			err = errors.Join(err, ErrForbiddenCommand, errors.New("    command `\\"+cmd+"` is forbidden"))
 		}
 	}
 
-	beginReg, _ := regexp.Compile("\\\\begin\\s*{document}")
-	if !beginReg.MatchString(input) {
+	data := templateData{}
+
+	beginReg := regexp.MustCompile(`\\begin\s*{document}`)
+	beginPos := beginReg.FindStringIndex(input)
+	if beginPos == nil {
 		for _, cmd := range opt.CommandsBeforeBeginDocument {
-			if strings.Contains(input, "\\"+cmd) {
+			if strings.Contains(input, `\`+cmd) {
 				err = errors.Join(err, ErrCmdWithoutBeginDocument, errors.New("    can't use `\\"+cmd+"` without `\\begin{document}`"))
 			}
 		}
-
-		debug = errors.Join(debug, errors.New("inserting `\\begin{document}\\begin{minipage}{16cm}` at input start"))
-		debug = errors.Join(debug, errors.New("inserting `\\end{minipage}\\end{document}` at the end of input"))
-		input = "\\begin{document}\n\\begin{minipage}{16cm}\n" + input + "\n\\end{minipage}\n\\end{document}"
+		data.Preamble = opt.UserPreamble
+		data.Document = input
 	} else {
-		endReg, _ := regexp.Compile("\\\\end\\s*{document}")
+		endReg := regexp.MustCompile(`\\end\s*{document}`)
 
-		beginPos := beginReg.FindStringIndex(input)
 		endPos := endReg.FindStringIndex(input)
-		input = input[:beginPos[1]] +
-			"\n\\begin{minipage}{16cm}\n" +
-			input[beginPos[1]:endPos[0]] +
-			"\n\\end{minipage}\n" +
-			input[endPos[0]:]
 
-		debug = errors.Join(debug, errors.New("inserting `\\begin{minipage}{16cm}` after begin document"))
-		debug = errors.Join(debug, errors.New("inserting `\\end{minipage}` before end document"))
+		data.Preamble = input[:beginPos[1]]
+		data.Document = input[beginPos[1]:endPos[0]]
+		data.After = input[endPos[0]:]
 	}
 
-	preambleFile, e := os.Open(opt.PreambleFile)
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(preambleFile)
-
+	t, e := template.ParseFiles(opt.TemplateFile)
 	if e != nil {
-		err = errors.Join(err, e)
-	} else {
-		debug = errors.Join(debug, errors.New("writing preamble content to buffer"))
-		_, e := preambleFile.WriteTo(res)
-		if e != nil {
-			err = errors.Join(err, e)
-		}
+		return nil, errors.Join(err, e)
 	}
-
-	debug = errors.Join(debug, errors.New("writing input to buffer"))
-	res.WriteString(input)
+	e = t.Execute(res, data)
+	if e != nil {
+		return nil, errors.Join(err, e)
+	}
 
 	if err != nil {
 		err = errors.Join(ErrPreprocessor, err)
 	}
 
-	return PreprocessingResult{Value: res, Debug: debug}, err
+	return &PreprocessingResult{Value: res, Debug: debug}, err
 }
