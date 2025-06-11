@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"github.com/anhgelus/gokord"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/data"
@@ -81,8 +80,8 @@ func OnProfileModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-	if errResp := resp.SetMessage("Preamble saved").Send(); errResp != nil {
-		utils.SendAlert("commands/profile.go - Sending success", errResp.Error())
+	if err = resp.SetMessage("Preamble saved").Send(); err != nil {
+		utils.SendAlert("commands/profile.go - Sending success", err.Error())
 	}
 }
 
@@ -105,7 +104,7 @@ func Profile(dg *discordgo.Session, i *discordgo.InteractionCreate, optMap utils
 	if len(nerd.Preamble) == 0 {
 		nerd.Preamble = "Default one"
 	}
-	respErr := resp.AddEmbed(&discordgo.MessageEmbed{
+	err = resp.AddEmbed(&discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s's nerd profile", u.Username),
 		Description: fmt.Sprintf("Your preamble:\n```tex\n%s\n```", nerd.Preamble),
 		Color:       0,
@@ -118,10 +117,7 @@ func Profile(dg *discordgo.Session, i *discordgo.InteractionCreate, optMap utils
 			CustomID: EditPreambleID,
 		},
 	}}).Send()
-	if respErr != nil {
-		utils.SendAlert("commands/profile.go - Sending profile", respErr.Error(), "discord_id", u.ID)
-		if gokord.Debug {
-			fmt.Println(respErr.FormatString())
-		}
+	if err != nil {
+		utils.SendAlert("commands/profile.go - Sending profile", err.Error(), "discord_id", u.ID)
 	}
 }

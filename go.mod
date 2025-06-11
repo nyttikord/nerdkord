@@ -3,7 +3,7 @@ module github.com/nyttikord/nerdkord
 go 1.24
 
 require (
-	github.com/anhgelus/gokord v0.10.2
+	github.com/anhgelus/gokord v0.10.3
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/nyttikord/gomath v0.2.0
 	github.com/pelletier/go-toml/v2 v2.2.4
