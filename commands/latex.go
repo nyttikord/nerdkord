@@ -16,6 +16,12 @@ import (
 var (
 	bgColor = color.RGBA{R: 54, G: 57, B: 62, A: 255}
 	fgColor = color.White
+
+	defaultPreprocessingOptions = &latex2png.PreprocessingOptions{
+		ForbiddenCommands:           []string{"include", "import"},
+		CommandsBeforeBeginDocument: []string{"usepackage"},
+		TemplateFile:                "config/template.tex",
+	}
 )
 
 const (
@@ -60,19 +66,16 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	latexSource := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 
 	file := new(bytes.Buffer)
+	opt := &*defaultPreprocessingOptions
+	opt.UserPreamble = nerd.Preamble
 	err = latex2png.Compile(file, latexSource, &latex2png.Options{
-		LatexBinary:     "latex",
-		DvipngBinary:    "dvipng",
-		OutputFormat:    latex2png.PNG,
-		BackgroundColor: bgColor,
-		ForegroundColor: fgColor,
-		ImageDPI:        300,
-		PreprocessingOptions: &latex2png.PreprocessingOptions{
-			ForbiddenCommands:           []string{"include", "import"},
-			CommandsBeforeBeginDocument: []string{"usepackage"},
-			TemplateFile:                "config/template.tex",
-			UserPreamble:                nerd.Preamble,
-		},
+		LatexBinary:          "latex",
+		DvipngBinary:         "dvipng",
+		OutputFormat:         latex2png.PNG,
+		BackgroundColor:      bgColor,
+		ForegroundColor:      fgColor,
+		ImageDPI:             300,
+		PreprocessingOptions: opt,
 	})
 
 	if err != nil {

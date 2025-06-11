@@ -5,6 +5,7 @@ import (
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/data"
+	"strings"
 )
 
 const (
@@ -71,7 +72,14 @@ func OnProfileModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		return
 	}
 
-	nerd.Preamble = submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
+	val := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
+	if strings.Contains(val, `\documentclass`) {
+		if err = resp.SetMessage("You can't use `\\\\documentclass`").Send(); err != nil {
+			utils.SendAlert("commands/profile.go - Sending error getting document class", err.Error())
+		}
+		return
+	}
+	nerd.Preamble = val
 	err = nerd.Save()
 	if err != nil {
 		utils.SendAlert("commands/profile.go - Saving preamble", err.Error(), "discord_id", u.ID)
