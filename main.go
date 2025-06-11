@@ -96,5 +96,5 @@ func main() {
 func afterInit(dg *discordgo.Session) {
 	dg.AddHandler(commands.OnLatexModalSubmit)
 	dg.AddHandler(commands.OnProfileButton)
-	dg.AddHandler(commands.OnProfileModal)
+	dg.AddHandler(commands.OnProfileModalSubmit)
 }

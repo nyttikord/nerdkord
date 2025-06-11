@@ -46,7 +46,7 @@ func OnProfileButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func OnProfileModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func OnProfileModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type != discordgo.InteractionModalSubmit {
 		return
 	}
