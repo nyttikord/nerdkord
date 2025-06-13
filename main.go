@@ -43,9 +43,19 @@ func main() {
 	}
 
 	latexCmd := gokord.NewCommand("latex", "Compiles latex source").
+		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
+		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
+		AddContext(discordgo.InteractionContextGuild).
+		AddContext(discordgo.InteractionContextPrivateChannel).
+		AddContext(discordgo.InteractionContextBotDM).
 		SetHandler(commands.Latex)
 
 	latexifyCmd := gokord.NewCommand("latexify", "Converts a math expression to latex").
+		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
+		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
+		AddContext(discordgo.InteractionContextGuild).
+		AddContext(discordgo.InteractionContextPrivateChannel).
+		AddContext(discordgo.InteractionContextBotDM).
 		AddOption(gokord.NewOption(
 			discordgo.ApplicationCommandOptionString,
 			"expression",
@@ -53,6 +63,11 @@ func main() {
 		SetHandler(commands.Latexify)
 
 	calculateCmd := gokord.NewCommand("calculate", "Parses and evaluates a math expression").
+		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
+		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
+		AddContext(discordgo.InteractionContextGuild).
+		AddContext(discordgo.InteractionContextPrivateChannel).
+		AddContext(discordgo.InteractionContextBotDM).
 		AddOption(gokord.NewOption(
 			discordgo.ApplicationCommandOptionString,
 			"expression",
@@ -63,7 +78,12 @@ func main() {
 			"The number of digits you want. Default : 6")).
 		SetHandler(commands.Calculate)
 
-	meCmd := gokord.NewCommand("profile", "Show and edit your profile").
+	profile := gokord.NewCommand("profile", "Show and edit your profile").
+		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
+		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
+		AddContext(discordgo.InteractionContextGuild).
+		AddContext(discordgo.InteractionContextPrivateChannel).
+		AddContext(discordgo.InteractionContextBotDM).
 		SetHandler(commands.Profile)
 
 	bot := gokord.Bot{
@@ -83,7 +103,7 @@ func main() {
 			},
 		},
 		Commands: []gokord.CommandBuilder{
-			latexCmd, latexifyCmd, calculateCmd, meCmd,
+			latexCmd, latexifyCmd, calculateCmd, profile,
 		},
 		AfterInit:   afterInit,
 		Innovations: innovations,
