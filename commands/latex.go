@@ -29,8 +29,8 @@ var (
 )
 
 const (
-	LaTeXModalID   = "latex_modal"
-	SourceButtonID = "latex_source"
+	LaTeXModalID = "latex_modal"
+	GetSourceID  = "latex_source"
 )
 
 func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -130,15 +130,34 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Name:        "generated_latex.png",
 		ContentType: "image/png",
 		Reader:      output,
-	}).Send()
+	}).AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+		discordgo.Button{
+			Label:    "Source",
+			Style:    discordgo.SecondaryButton,
+			Disabled: false,
+			Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
+			CustomID: GetSourceID,
+		},
+	}}).Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
+		return
 	}
-	sourceMap[fmt.Sprintf("%s:%d", i.ChannelID, time.Now().Unix())] = &latexSource
-	go func() {
+	k := fmt.Sprintf("%s:%d", i.ChannelID, time.Now().Unix())
+	sourceMap[k] = &latexSource
+	// remove source button after 15 minutes and clean map
+	go func(resp *utils.ResponseBuilder, k string, output *bytes.Buffer) {
 		time.Sleep(15 * time.Minute)
-		//TODO: clean and update
-	}()
+		err := resp.IsEdit().AddFile(&discordgo.File{
+			Name:        "generated_latex.png",
+			ContentType: "image/png",
+			Reader:      output,
+		}).Send()
+		if err != nil {
+			utils.SendAlert("commands/latex.go - Cannot remove source button", err.Error())
+		}
+		delete(sourceMap, k)
+	}(resp, k, output)
 }
 
 func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -147,7 +166,7 @@ func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	submitData := i.ModalSubmitData()
-	if submitData.CustomID != SourceButtonID {
+	if submitData.CustomID != GetSourceID {
 		utils.SendDebug("commands/latex.go - not a source button ID")
 		return
 	}
