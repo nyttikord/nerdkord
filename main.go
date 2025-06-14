@@ -114,7 +114,10 @@ func main() {
 }
 
 func afterInit(dg *discordgo.Session) {
+	//commands: latex
 	dg.AddHandler(commands.OnLatexModalSubmit)
+	dg.AddHandler(commands.OnSourceButton)
+	//commands: profile
 	dg.AddHandler(commands.OnProfileButton)
 	dg.AddHandler(commands.OnProfileModalSubmit)
 }

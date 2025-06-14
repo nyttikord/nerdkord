@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/data"
@@ -11,6 +12,7 @@ import (
 	"image/color"
 	"image/png"
 	"math"
+	"time"
 )
 
 var (
@@ -22,10 +24,13 @@ var (
 		CommandsBeforeBeginDocument: []string{"usepackage"},
 		TemplateFile:                "config/template.tex",
 	}
+
+	sourceMap = make(map[string]*string, 100)
 )
 
 const (
-	LaTeXModalID = "latex_modal"
+	LaTeXModalID   = "latex_modal"
+	SourceButtonID = "latex_source"
 )
 
 func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -128,6 +133,44 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}).Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
+	}
+	sourceMap[fmt.Sprintf("%s:%d", i.ChannelID, time.Now().Unix())] = &latexSource
+	go func() {
+		time.Sleep(15 * time.Minute)
+		//TODO: clean and update
+	}()
+}
+
+func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if i.Type != discordgo.InteractionMessageComponent {
+		return
+	}
+
+	submitData := i.ModalSubmitData()
+	if submitData.CustomID != SourceButtonID {
+		utils.SendDebug("commands/latex.go - not a source button ID")
+		return
+	}
+	resp := utils.NewResponseBuilder(s, i).IsDeferred()
+	t, err := discordgo.SnowflakeTimestamp(i.Message.ID)
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Getting time from discord", err.Error(), "id", i.Message.ID)
+		if err = resp.SetMessage("Error while getting the source").Send(); err != nil {
+			utils.SendAlert("commands/latex.go - Sending error getting time from discord", err.Error())
+		}
+		return
+	}
+	k := fmt.Sprintf("%s:%d", i.ChannelID, t.Unix())
+	source, ok := sourceMap[k]
+	if !ok {
+		utils.SendWarn("cannot find source", "key", k)
+		if err = resp.SetMessage("Cannot find the source").Send(); err != nil {
+			utils.SendAlert("commands/latex.go - Sending error cannot find source", err.Error())
+		}
+		return
+	}
+	if err = resp.SetMessage(fmt.Sprintf("```\n%s\n```", *source)).Send(); err != nil {
+		utils.SendAlert("commands/latex.go - Sending source", err.Error())
 	}
 }
 
