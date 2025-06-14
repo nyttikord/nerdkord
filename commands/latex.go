@@ -132,7 +132,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Reader:      output,
 	}).AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
 		discordgo.Button{
-			Label:    "Source",
+			Label:    "",
 			Style:    discordgo.SecondaryButton,
 			Disabled: false,
 			Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
@@ -143,13 +143,18 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
 		return
 	}
-	k := fmt.Sprintf("%s:%d", i.ChannelID, time.Now().Unix())
+	m, err := s.InteractionResponse(i.Interaction)
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Getting interaction response", err.Error(), "id", i.ID)
+		return
+	}
+	k := fmt.Sprintf("%s:%s", i.ChannelID, m.ID)
 	sourceMap[k] = &latexSource
 	utils.SendDebug("source saved", "key", k)
 	// remove source button after 15 minutes and clean map
-	go func(resp *utils.ResponseBuilder, k string, output *bytes.Buffer) {
+	go func(s *discordgo.Session, i *discordgo.InteractionCreate, k string, output *bytes.Buffer) {
 		time.Sleep(15 * time.Minute)
-		err := resp.IsEdit().AddFile(&discordgo.File{
+		err := utils.NewResponseBuilder(s, i).IsEdit().AddFile(&discordgo.File{
 			Name:        "generated_latex.png",
 			ContentType: "image/png",
 			Reader:      output,
@@ -158,7 +163,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			utils.SendAlert("commands/latex.go - Cannot remove source button", err.Error())
 		}
 		delete(sourceMap, k)
-	}(resp, k, output)
+	}(s, i, k, output)
 }
 
 func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -172,24 +177,16 @@ func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
-	t, err := discordgo.SnowflakeTimestamp(i.Message.ID)
-	if err != nil {
-		utils.SendAlert("commands/latex.go - Getting time from discord", err.Error(), "id", i.Message.ID)
-		if err = resp.SetMessage("Error while getting the source").Send(); err != nil {
-			utils.SendAlert("commands/latex.go - Sending error getting time from discord", err.Error())
-		}
-		return
-	}
-	k := fmt.Sprintf("%s:%d", i.ChannelID, t.Unix())
+	k := fmt.Sprintf("%s:%s", i.ChannelID, i.Message.ID)
 	source, ok := sourceMap[k]
 	if !ok {
 		utils.SendWarn("cannot find source", "key", k)
-		if err = resp.SetMessage("Cannot find the source").Send(); err != nil {
+		if err := resp.SetMessage("Cannot find the source").Send(); err != nil {
 			utils.SendAlert("commands/latex.go - Sending error cannot find source", err.Error())
 		}
 		return
 	}
-	if err = resp.SetMessage(fmt.Sprintf("```\n%s\n```", *source)).Send(); err != nil {
+	if err := resp.SetMessage(fmt.Sprintf("```\n%s\n```", *source)).Send(); err != nil {
 		utils.SendAlert("commands/latex.go - Sending source", err.Error())
 	}
 }
