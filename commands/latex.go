@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/data"
@@ -11,6 +12,7 @@ import (
 	"image/color"
 	"image/png"
 	"math"
+	"time"
 )
 
 var (
@@ -22,10 +24,13 @@ var (
 		CommandsBeforeBeginDocument: []string{"usepackage"},
 		TemplateFile:                "config/template.tex",
 	}
+
+	sourceMap = make(map[string]*string, 100)
 )
 
 const (
 	LaTeXModalID = "latex_modal"
+	GetSourceID  = "latex_source"
 )
 
 func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -125,9 +130,61 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Name:        "generated_latex.png",
 		ContentType: "image/png",
 		Reader:      output,
-	}).Send()
+	}).AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+		discordgo.Button{
+			Label:    "",
+			Style:    discordgo.SecondaryButton,
+			Disabled: false,
+			Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
+			CustomID: GetSourceID,
+		},
+	}}).Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
+		return
+	}
+	// saving source
+	m, err := s.InteractionResponse(i.Interaction)
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Getting interaction response", err.Error(), "id", i.ID)
+		return
+	}
+	k := fmt.Sprintf("%s:%s", i.ChannelID, m.ID)
+	sourceMap[k] = &latexSource
+	utils.SendDebug("source saved", "key", k)
+	// remove source button after 5 minutes and clean map
+	go func(s *discordgo.Session, i *discordgo.InteractionCreate, k string, output *bytes.Buffer) {
+		time.Sleep(5 * time.Minute)
+		err := utils.NewResponseBuilder(s, i).IsEdit().Send()
+		if err != nil {
+			utils.SendAlert("commands/latex.go - Cannot remove source button", err.Error())
+		}
+		delete(sourceMap, k)
+	}(s, i, k, output)
+}
+
+func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if i.Type != discordgo.InteractionMessageComponent {
+		return
+	}
+
+	submitData := i.MessageComponentData()
+	if submitData.CustomID != GetSourceID {
+		utils.SendDebug("commands/latex.go - not a source button ID")
+		return
+	}
+	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
+	k := fmt.Sprintf("%s:%s", i.ChannelID, i.Message.ID)
+	source, ok := sourceMap[k]
+	if !ok {
+		utils.SendWarn("cannot find source", "key", k)
+		if err := resp.SetMessage("Cannot find the source").Send(); err != nil {
+			utils.SendAlert("commands/latex.go - Sending error cannot find source", err.Error())
+		}
+		return
+	}
+	if err := resp.SetMessage(fmt.Sprintf("```\n%s\n```", *source)).Send(); err != nil {
+		utils.SendAlert("commands/latex.go - Sending source", err.Error())
 	}
 }
 
