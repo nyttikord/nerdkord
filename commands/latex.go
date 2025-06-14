@@ -143,6 +143,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
 		return
 	}
+	// saving source
 	m, err := s.InteractionResponse(i.Interaction)
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Getting interaction response", err.Error(), "id", i.ID)
@@ -153,12 +154,8 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	utils.SendDebug("source saved", "key", k)
 	// remove source button after 15 minutes and clean map
 	go func(s *discordgo.Session, i *discordgo.InteractionCreate, k string, output *bytes.Buffer) {
-		time.Sleep(15 * time.Minute)
-		err := utils.NewResponseBuilder(s, i).IsEdit().AddFile(&discordgo.File{
-			Name:        "generated_latex.png",
-			ContentType: "image/png",
-			Reader:      output,
-		}).Send()
+		time.Sleep(5 * time.Minute)
+		err := utils.NewResponseBuilder(s, i).IsEdit().Send()
 		if err != nil {
 			utils.SendAlert("commands/latex.go - Cannot remove source button", err.Error())
 		}
