@@ -152,7 +152,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	k := fmt.Sprintf("%s:%s", i.ChannelID, m.ID)
 	sourceMap[k] = &latexSource
 	utils.SendDebug("source saved", "key", k)
-	// remove source button after 15 minutes and clean map
+	// remove source button after 5 minutes and clean map
 	go func(s *discordgo.Session, i *discordgo.InteractionCreate, k string, output *bytes.Buffer) {
 		time.Sleep(5 * time.Minute)
 		err := utils.NewResponseBuilder(s, i).IsEdit().Send()
