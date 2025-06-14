@@ -28,7 +28,26 @@ func OnProfileButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.SendDebug("commands/profile.go - not a profile button ID")
 		return
 	}
-	err := utils.NewResponseBuilder(s, i).
+	var u *discordgo.User
+	if i.User != nil {
+		u = i.User
+	} else {
+		u = i.Member.User
+	}
+	var val string
+	nerd, err := data.GetNerd(u.ID)
+	if err != nil {
+		utils.SendAlert("commands/profile.go - Getting nerd profile", err.Error(), "discord_id", u.ID)
+	} else {
+		val = nerd.Preamble
+		if len(nerd.Preamble) == 0 {
+			val, err = getDefaultPreamble()
+			if err != nil {
+				utils.SendAlert("commands/profile.go - Getting default preamble", err.Error())
+			}
+		}
+	}
+	err = utils.NewResponseBuilder(s, i).
 		IsModal().
 		SetTitle("Edit preamble").
 		SetCustomID(EditPreambleID).
@@ -38,6 +57,7 @@ func OnProfileButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Label:       "Preamble",
 				Style:       discordgo.TextInputParagraph,
 				Placeholder: `\usepackage[french]{babel}`,
+				Value:       val,
 				Required:    true,
 				MinLength:   0,
 				MaxLength:   4000,
