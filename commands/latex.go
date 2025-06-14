@@ -98,10 +98,20 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			} else {
 				resp.SetMessage("⚠️ Compilation error:\n```\n" + err.Error() + "\n```")
 			}
-			err = resp.IsEphemeral().Send()
+			err = resp.IsEphemeral().AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "",
+					Style:    discordgo.SecondaryButton,
+					Disabled: false,
+					Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
+					CustomID: GetSourceID,
+				},
+			}}).Send()
 			if err != nil {
 				utils.SendAlert("commands/latex.go - Sending compilation error", err.Error())
 			}
+
+			saveSource(s, i, latexSource)
 			return
 		}
 		if errors.Is(err, latex2png.ErrPreprocessor) {
@@ -164,6 +174,10 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	// saving source
+	saveSource(s, i, latexSource)
+}
+
+func saveSource(s *discordgo.Session, i *discordgo.InteractionCreate, latexSource string) {
 	m, err := s.InteractionResponse(i.Interaction)
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Getting interaction response", err.Error(), "id", i.ID)
@@ -173,14 +187,14 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	sourceMap[k] = &latexSource
 	utils.SendDebug("source saved", "key", k)
 	// remove source button after 5 minutes and clean map
-	go func(s *discordgo.Session, i *discordgo.InteractionCreate, k string, output *bytes.Buffer) {
+	go func(s *discordgo.Session, i *discordgo.InteractionCreate, k string) {
 		time.Sleep(5 * time.Minute)
 		err := utils.NewResponseBuilder(s, i).IsEdit().Send()
 		if err != nil {
 			utils.SendAlert("commands/latex.go - Cannot remove source button", err.Error())
 		}
 		delete(sourceMap, k)
-	}(s, i, k, output)
+	}(s, i, k)
 }
 
 func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
