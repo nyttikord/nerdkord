@@ -16,7 +16,13 @@ type ErrLatexCompilation struct {
 }
 
 func (e ErrLatexCompilation) Error() string {
-	return e.rawErr.String()
+	s := e.rawErr.String()
+
+	l := strings.Split(s, "!")
+	s = strings.Join(l[1:], "!")
+
+	l = strings.Split(s, "Transcript written on ")
+	return "!" + strings.Join(l[:len(l)-1], "Transcript written on ")
 }
 
 func Compile(output io.Writer, latex string, opt *Options) error {
