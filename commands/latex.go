@@ -86,13 +86,19 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		if errors.As(err, &latex2png.ErrLatexCompilation{}) {
 			utils.SendDebug("commands/latex.go - Latex compilation error")
-			err = resp.SetMessage("⚠️ Compilation error").AddFile(
-				&discordgo.File{
-					Name:        "error.txt",
-					ContentType: "text/plain",
-					Reader:      bytes.NewReader([]byte(err.Error())),
-				},
-			).Send()
+
+			if len(err.Error()) > 1950 {
+				resp.SetMessage("⚠️ Compilation error").AddFile(
+					&discordgo.File{
+						Name:        "error.txt",
+						ContentType: "text/plain",
+						Reader:      bytes.NewReader([]byte(err.Error())),
+					},
+				)
+			} else {
+				resp.SetMessage("⚠️ Compilation error:\n```\n" + err.Error() + "\n```")
+			}
+			err = resp.IsEphemeral().Send()
 			if err != nil {
 				utils.SendAlert("commands/latex.go - Sending compilation error", err.Error())
 			}
