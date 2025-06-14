@@ -84,10 +84,15 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
-		var latexCompilationErr *latex2png.ErrLatexCompilation
-		if errors.As(err, &latexCompilationErr) {
+		if errors.As(err, &latex2png.ErrLatexCompilation{}) {
 			utils.SendDebug("commands/latex.go - Latex compilation error")
-			err = resp.SetMessage("⚠️ Compilation error```\n" + err.Error() + "\n```").Send()
+			err = resp.SetMessage("⚠️ Compilation error").AddFile(
+				&discordgo.File{
+					Name:        "error.txt",
+					ContentType: "text/plain",
+					Reader:      bytes.NewReader([]byte(err.Error())),
+				},
+			).Send()
 			if err != nil {
 				utils.SendAlert("commands/latex.go - Sending compilation error", err.Error())
 			}
@@ -192,7 +197,7 @@ func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-	if err := resp.SetMessage(fmt.Sprintf("```\n%s\n```", *source)).Send(); err != nil {
+	if err := resp.SetMessage(fmt.Sprintf("Latex source\n```\n%s\n```", *source)).Send(); err != nil {
 		utils.SendAlert("commands/latex.go - Sending source", err.Error())
 	}
 }
