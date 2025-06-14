@@ -145,6 +145,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	k := fmt.Sprintf("%s:%d", i.ChannelID, time.Now().Unix())
 	sourceMap[k] = &latexSource
+	utils.SendDebug("source saved", "key", k)
 	// remove source button after 15 minutes and clean map
 	go func(resp *utils.ResponseBuilder, k string, output *bytes.Buffer) {
 		time.Sleep(15 * time.Minute)
@@ -165,12 +166,12 @@ func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	submitData := i.ModalSubmitData()
+	submitData := i.MessageComponentData()
 	if submitData.CustomID != GetSourceID {
 		utils.SendDebug("commands/latex.go - not a source button ID")
 		return
 	}
-	resp := utils.NewResponseBuilder(s, i).IsDeferred()
+	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
 	t, err := discordgo.SnowflakeTimestamp(i.Message.ID)
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Getting time from discord", err.Error(), "id", i.Message.ID)
