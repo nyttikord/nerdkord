@@ -37,13 +37,13 @@ func OnProfileButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var val string
 	nerd, err := data.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("commands/profile.go - Getting nerd profile", err.Error(), "discord_id", u.ID)
+		utils.SendWarn("Getting nerd profile", "err", err.Error(), "discord_id", u.ID)
 	} else {
 		val = nerd.Preamble
 		if len(nerd.Preamble) == 0 {
 			val, err = getDefaultPreamble()
 			if err != nil {
-				utils.SendAlert("commands/profile.go - Getting default preamble", err.Error())
+				utils.SendWarn("Getting default preamble", "err", err.Error())
 			}
 		}
 	}
