@@ -40,9 +40,6 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 	}
 
 	f, err := os.CreateTemp(tempDir, "nerdkord_*.tex")
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(f)
 	if err != nil {
 		return err
 	}
@@ -92,9 +89,6 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 	_ = cmd.Run()
 
 	outputFile, err := os.Open(strings.Split(f.Name(), ".")[0] + ".png")
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(outputFile)
 	if err != nil {
 		return err
 	}
@@ -103,6 +97,9 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 	if err != nil {
 		return err
 	}
+
+	_ = outputFile.Close()
+	_ = f.Close()
 
 	err = os.RemoveAll(tempDir)
 	if err != nil {
