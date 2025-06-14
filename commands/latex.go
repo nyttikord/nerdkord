@@ -203,7 +203,18 @@ func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-	if err := resp.SetMessage(fmt.Sprintf("Latex source\n```\n%s\n```", *source)).Send(); err != nil {
+
+	msg := fmt.Sprintf("Latex source:\n```\n%s\n```", *source)
+	if len(msg) > 1999 {
+		resp.SetMessage("Latex source:").AddFile(&discordgo.File{
+			Name:        "source.tex",
+			ContentType: "application/x-latex",
+			Reader:      bytes.NewBuffer([]byte(*source)),
+		})
+	} else {
+		resp.SetMessage(msg)
+	}
+	if err := resp.Send(); err != nil {
 		utils.SendAlert("commands/latex.go - Sending source", err.Error())
 	}
 }
