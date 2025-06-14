@@ -1,6 +1,8 @@
 package latex2png
 
 import (
+	"bytes"
+	"errors"
 	"github.com/anhgelus/gokord/utils"
 	"io"
 	"os"
@@ -8,6 +10,14 @@ import (
 	"strconv"
 	"strings"
 )
+
+type ErrLatexCompilation struct {
+	rawErr *bytes.Buffer
+}
+
+func (e ErrLatexCompilation) Error() string {
+	return e.rawErr.String()
+}
 
 func Compile(output io.Writer, latex string, opt *Options) error {
 	res, err := Preprocess(latex, opt.PreprocessingOptions)
@@ -48,12 +58,15 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 		"-output-directory="+tempDir,
 		f.Name(),
 	)
-	err = cmd.Start()
+	var outErr bytes.Buffer
+	cmd.Stdout = &outErr
+
+	err = cmd.Run()
 	if err != nil {
-		return err
-	}
-	err = cmd.Wait()
-	if err != nil {
+		var exitError *exec.ExitError
+		if errors.As(err, &exitError) {
+			return ErrLatexCompilation{rawErr: &outErr}
+		}
 		return err
 	}
 
@@ -75,12 +88,8 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 		strings.Split(f.Name(), ".")[0]+".dvi",
 	)
 
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
 	// Ignore this error because it is triggered everytime
-	_ = cmd.Wait()
+	_ = cmd.Run()
 
 	outputFile, err := os.Open(strings.Split(f.Name(), ".")[0] + ".png")
 	defer func(f *os.File) {
