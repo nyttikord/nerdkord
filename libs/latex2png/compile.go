@@ -101,8 +101,13 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 
 	_, err = outputFile.WriteTo(output)
 	if err != nil {
-		return nil
+		return err
 	}
 
-	return os.RemoveAll(tempDir)
+	err = os.RemoveAll(tempDir)
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Removing temporary files", err.Error())
+	}
+
+	return nil
 }
