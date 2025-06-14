@@ -84,8 +84,17 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
+		var latexCompilationErr *latex2png.ErrLatexCompilation
+		if errors.As(err, &latexCompilationErr) {
+			utils.SendDebug("commands/latex.go - Latex compilation error")
+			err = resp.SetMessage("⚠️ Compilation error```\n" + err.Error() + "\n```").Send()
+			if err != nil {
+				utils.SendAlert("commands/latex.go - Sending compilation error", err.Error())
+			}
+			return
+		}
 		if errors.Is(err, latex2png.ErrPreprocessor) {
-			utils.SendDebug("commands.latex.go - Preprocessing error")
+			utils.SendDebug("commands/latex.go - Preprocessing error")
 			err = resp.SetMessage("```\n" + err.Error() + "\n```").Send()
 			if err != nil {
 				utils.SendAlert("commands/latex.go - Sending preprocessing error", err.Error())
@@ -93,10 +102,10 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
-		utils.SendDebug("commands/latex.go - Error while compiling latex")
-		err = resp.SetMessage("Error while compiling latex").Send()
+		utils.SendAlert("commands/latex.go - Compiling latex", err.Error())
+		err = resp.SetMessage("Unexpected error while compiling latex").Send()
 		if err != nil {
-			utils.SendAlert("commands/latex.go - Sending latex error", err.Error())
+			utils.SendAlert("commands/latex.go - Sending unexpected latex error", err.Error())
 		}
 		return
 	}
