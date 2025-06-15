@@ -84,8 +84,38 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
+		if errors.As(err, &latex2png.ErrLatexCompilation{}) {
+			utils.SendDebug("commands/latex.go - Latex compilation error")
+
+			if len(err.Error()) > 1950 {
+				resp.SetMessage("⚠️ Compilation error").AddFile(
+					&discordgo.File{
+						Name:        "error.txt",
+						ContentType: "text/plain",
+						Reader:      bytes.NewReader([]byte(err.Error())),
+					},
+				)
+			} else {
+				resp.SetMessage("⚠️ Compilation error:\n```\n" + err.Error() + "\n```")
+			}
+			err = resp.IsEphemeral().AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "",
+					Style:    discordgo.SecondaryButton,
+					Disabled: false,
+					Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
+					CustomID: GetSourceID,
+				},
+			}}).Send()
+			if err != nil {
+				utils.SendAlert("commands/latex.go - Sending compilation error", err.Error())
+			}
+
+			saveSource(s, i, latexSource)
+			return
+		}
 		if errors.Is(err, latex2png.ErrPreprocessor) {
-			utils.SendDebug("commands.latex.go - Preprocessing error")
+			utils.SendDebug("commands/latex.go - Preprocessing error")
 			err = resp.SetMessage("```\n" + err.Error() + "\n```").Send()
 			if err != nil {
 				utils.SendAlert("commands/latex.go - Sending preprocessing error", err.Error())
@@ -93,10 +123,10 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
-		utils.SendDebug("commands/latex.go - Error while compiling latex")
-		err = resp.SetMessage("Error while compiling latex").Send()
+		utils.SendAlert("commands/latex.go - Compiling latex", err.Error())
+		err = resp.SetMessage("Unexpected error while compiling latex").Send()
 		if err != nil {
-			utils.SendAlert("commands/latex.go - Sending latex error", err.Error())
+			utils.SendAlert("commands/latex.go - Sending unexpected latex error", err.Error())
 		}
 		return
 	}
@@ -144,6 +174,10 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	// saving source
+	saveSource(s, i, latexSource)
+}
+
+func saveSource(s *discordgo.Session, i *discordgo.InteractionCreate, latexSource string) {
 	m, err := s.InteractionResponse(i.Interaction)
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Getting interaction response", err.Error(), "id", i.ID)
@@ -153,14 +187,14 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	sourceMap[k] = &latexSource
 	utils.SendDebug("source saved", "key", k)
 	// remove source button after 5 minutes and clean map
-	go func(s *discordgo.Session, i *discordgo.InteractionCreate, k string, output *bytes.Buffer) {
+	go func(s *discordgo.Session, i *discordgo.InteractionCreate, k string) {
 		time.Sleep(5 * time.Minute)
 		err := utils.NewResponseBuilder(s, i).IsEdit().Send()
 		if err != nil {
 			utils.SendAlert("commands/latex.go - Cannot remove source button", err.Error())
 		}
 		delete(sourceMap, k)
-	}(s, i, k, output)
+	}(s, i, k)
 }
 
 func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -183,7 +217,18 @@ func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		return
 	}
-	if err := resp.SetMessage(fmt.Sprintf("```\n%s\n```", *source)).Send(); err != nil {
+
+	msg := fmt.Sprintf("Latex source:\n```\n%s\n```", *source)
+	if len(msg) > 1999 {
+		resp.SetMessage("Latex source:").AddFile(&discordgo.File{
+			Name:        "source.tex",
+			ContentType: "application/x-latex",
+			Reader:      bytes.NewBuffer([]byte(*source)),
+		})
+	} else {
+		resp.SetMessage(msg)
+	}
+	if err := resp.Send(); err != nil {
 		utils.SendAlert("commands/latex.go - Sending source", err.Error())
 	}
 }

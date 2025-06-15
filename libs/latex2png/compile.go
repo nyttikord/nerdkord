@@ -1,6 +1,8 @@
 package latex2png
 
 import (
+	"bytes"
+	"errors"
 	"github.com/anhgelus/gokord/utils"
 	"io"
 	"os"
@@ -8,6 +10,20 @@ import (
 	"strconv"
 	"strings"
 )
+
+type ErrLatexCompilation struct {
+	rawErr *bytes.Buffer
+}
+
+func (e ErrLatexCompilation) Error() string {
+	s := e.rawErr.String()
+
+	l := strings.Split(s, "!")
+	s = strings.Join(l[1:], "!")
+
+	l = strings.Split(s, "Transcript written on ")
+	return "!" + strings.Join(l[:len(l)-1], "Transcript written on ")
+}
 
 func Compile(output io.Writer, latex string, opt *Options) error {
 	res, err := Preprocess(latex, opt.PreprocessingOptions)
@@ -30,9 +46,6 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 	}
 
 	f, err := os.CreateTemp(tempDir, "nerdkord_*.tex")
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(f)
 	if err != nil {
 		return err
 	}
@@ -48,12 +61,15 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 		"-output-directory="+tempDir,
 		f.Name(),
 	)
-	err = cmd.Start()
+	var outErr bytes.Buffer
+	cmd.Stdout = &outErr
+
+	err = cmd.Run()
 	if err != nil {
-		return err
-	}
-	err = cmd.Wait()
-	if err != nil {
+		var exitError *exec.ExitError
+		if errors.As(err, &exitError) {
+			return ErrLatexCompilation{rawErr: &outErr}
+		}
 		return err
 	}
 
@@ -75,25 +91,26 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 		strings.Split(f.Name(), ".")[0]+".dvi",
 	)
 
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
 	// Ignore this error because it is triggered everytime
-	_ = cmd.Wait()
+	_ = cmd.Run()
 
 	outputFile, err := os.Open(strings.Split(f.Name(), ".")[0] + ".png")
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(outputFile)
 	if err != nil {
 		return err
 	}
 
 	_, err = outputFile.WriteTo(output)
 	if err != nil {
-		return nil
+		return err
 	}
 
-	return os.RemoveAll(tempDir)
+	_ = outputFile.Close()
+	_ = f.Close()
+
+	err = os.RemoveAll(tempDir)
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Removing temporary files", err.Error())
+	}
+
+	return nil
 }
