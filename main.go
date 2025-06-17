@@ -128,7 +128,8 @@ func afterInit(dg *discordgo.Session) {
 	//commands: latex
 	dg.AddHandler(commands.OnLatexModalSubmit)
 	dg.AddHandler(commands.OnSourceButton)
-	//commands: profile
-	dg.AddHandler(commands.OnPreambleButton)
+	//commands: preamble
+	dg.AddHandler(commands.OnEditPreambleButton)
+	dg.AddHandler(commands.OnResetPromptPreambleButton)
 	dg.AddHandler(commands.OnPreambleModalSubmit)
 }
