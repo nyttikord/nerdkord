@@ -4,9 +4,12 @@ import (
 	_ "embed"
 	"flag"
 	"github.com/anhgelus/gokord"
+	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
+	"github.com/joho/godotenv"
 	"github.com/nyttikord/nerdkord/commands"
 	"github.com/nyttikord/nerdkord/data"
+	"os"
 )
 
 var (
@@ -21,7 +24,15 @@ var (
 )
 
 func init() {
+	err := godotenv.Load()
+	if err != nil {
+		utils.SendAlert("main.go - Loading .env file", err.Error())
+	}
+
 	flag.StringVar(&token, "token", "", "token of the bot")
+	if token == "" {
+		token = os.Getenv("TOKEN")
+	}
 }
 
 func main() {
