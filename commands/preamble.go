@@ -19,13 +19,13 @@ var (
 	defaultPreamble = ""
 )
 
-func OnProfileButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func OnPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type != discordgo.InteractionMessageComponent {
 		return
 	}
 	componentData := i.MessageComponentData()
 	if componentData.CustomID != EditPreambleID {
-		utils.SendDebug("commands/profile.go - not a profile button ID")
+		utils.SendDebug("commands/preamble.go - not a profile button ID")
 		return
 	}
 	var u *discordgo.User
@@ -70,17 +70,17 @@ func OnProfileButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		} else {
 			u = i.User
 		}
-		utils.SendAlert("commands/profile.go - Sending modal to edit preamble", err.Error(), "discord_id", u.ID)
+		utils.SendAlert("commands/preamble.go - Sending modal to edit preamble", err.Error(), "discord_id", u.ID)
 	}
 }
 
-func OnProfileModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func OnPreambleModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type != discordgo.InteractionModalSubmit {
 		return
 	}
 	submitData := i.ModalSubmitData()
 	if submitData.CustomID != EditPreambleID {
-		utils.SendDebug("commands/profile.go - not a profile modal ID")
+		utils.SendDebug("commands/preamble.go - not a profile modal ID")
 		return
 	}
 	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
@@ -92,9 +92,9 @@ func OnProfileModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	}
 	nerd, err := data.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("commands/profile.go - Getting nerd", err.Error(), "discord_id", u.ID)
+		utils.SendAlert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your profile. Please report the bug.").Send(); err != nil {
-			utils.SendAlert("commands/profile.go - Sending error getting nerd", err.Error())
+			utils.SendAlert("commands/preamble.go - Sending error getting nerd", err.Error())
 		}
 		return
 	}
@@ -102,12 +102,12 @@ func OnProfileModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	val := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 	if strings.Contains(val, `\documentclass`) {
 		if err = resp.SetMessage("You can't use `\\documentclass`").Send(); err != nil {
-			utils.SendAlert("commands/profile.go - Sending error \\documentclass is present", err.Error())
+			utils.SendAlert("commands/preamble.go - Sending error \\documentclass is present", err.Error())
 		}
 		return
 	}
 	if err = resp.IsDeferred().Send(); err != nil {
-		utils.SendAlert("commands/profile.go - Sending deferred", err.Error(), "discord_id", u.ID)
+		utils.SendAlert("commands/preamble.go - Sending deferred", err.Error(), "discord_id", u.ID)
 		return
 	}
 	utils.SendDebug("Checking preamble's validity", "discord_id", u.ID)
@@ -123,7 +123,7 @@ func OnProfileModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	})
 	if err != nil {
 		if err = resp.SetMessage("Your preamble is invalid.").Send(); err != nil {
-			utils.SendAlert("commands/profile.go - Sending invalid preamble", err.Error())
+			utils.SendAlert("commands/preamble.go - Sending invalid preamble", err.Error())
 		}
 		return
 	}
@@ -131,18 +131,18 @@ func OnProfileModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	nerd.Preamble = val
 	err = nerd.Save()
 	if err != nil {
-		utils.SendAlert("commands/profile.go - Saving preamble", err.Error(), "discord_id", u.ID)
+		utils.SendAlert("commands/preamble.go - Saving preamble", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while saving your profile. Please report the bug.").Send(); err != nil {
-			utils.SendAlert("commands/profile.go - Sending error getting nerd", err.Error())
+			utils.SendAlert("commands/preamble.go - Sending error getting nerd", err.Error())
 		}
 		return
 	}
 	if err = resp.SetMessage("Preamble saved").Send(); err != nil {
-		utils.SendAlert("commands/profile.go - Sending success", err.Error())
+		utils.SendAlert("commands/preamble.go - Sending success", err.Error())
 	}
 }
 
-func Profile(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
+func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.OptionMap, resp *utils.ResponseBuilder) {
 	resp.IsEphemeral()
 	var u *discordgo.User
 	if i.User == nil {
@@ -152,9 +152,9 @@ func Profile(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.
 	}
 	nerd, err := data.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("commands/profile.go - Getting nerd", err.Error(), "discord_id", u.ID)
+		utils.SendAlert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your profile. Please report.").Send(); err != nil {
-			utils.SendAlert("commands/profile.go - Getting nerd error", err.Error(), "discord_id", u.ID)
+			utils.SendAlert("commands/preamble.go - Getting nerd error", err.Error(), "discord_id", u.ID)
 		}
 		return
 	}
@@ -162,26 +162,26 @@ func Profile(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils.
 		nerd.Preamble, err = getDefaultPreamble()
 		if err != nil {
 			if err = resp.SetMessage("An error occurred. Please report the bug.").Send(); err != nil {
-				utils.SendAlert("commands/profile.go - Sending error occurred while parsing template", err.Error())
+				utils.SendAlert("commands/preamble.go - Sending error occurred while parsing template", err.Error())
 			}
 			return
 		}
 	}
 	err = resp.AddEmbed(&discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("%s's nerd profile", u.Username),
+		Title:       fmt.Sprintf("%s's preamble", u.Username),
 		Description: fmt.Sprintf("Your preamble:\n```tex\n%s\n```", nerd.Preamble),
 		Color:       0,
 	}).AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
 		discordgo.Button{
-			Label:    "Edit preamble",
+			Label:    "Edit",
 			Style:    discordgo.PrimaryButton,
 			Disabled: false,
-			Emoji:    nil,
+			Emoji:    &discordgo.ComponentEmoji{Name: "✏️"},
 			CustomID: EditPreambleID,
 		},
 	}}).Send()
 	if err != nil {
-		utils.SendAlert("commands/profile.go - Sending profile", err.Error(), "discord_id", u.ID)
+		utils.SendAlert("commands/preamble.go - Sending profile", err.Error(), "discord_id", u.ID)
 	}
 }
 
@@ -190,7 +190,7 @@ func getDefaultPreamble() (string, error) {
 		t, err := template.ParseFiles(defaultPreprocessingOptions.TemplateFile)
 		if err != nil {
 			utils.SendAlert(
-				"commands/profile.go - Parsing template file", err.Error(),
+				"commands/preamble.go - Parsing template file", err.Error(),
 				"path", defaultPreprocessingOptions.TemplateFile,
 			)
 		} else {
