@@ -2,11 +2,15 @@ package main
 
 import (
 	_ "embed"
+	"errors"
 	"flag"
 	"github.com/anhgelus/gokord"
+	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
+	"github.com/joho/godotenv"
 	"github.com/nyttikord/nerdkord/commands"
 	"github.com/nyttikord/nerdkord/data"
+	"os"
 )
 
 var (
@@ -21,7 +25,12 @@ var (
 )
 
 func init() {
-	flag.StringVar(&token, "token", "", "token of the bot")
+	err := godotenv.Load()
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		utils.SendWarn("Error while loading .env file", "error", err.Error())
+	}
+
+	flag.StringVar(&token, "token", os.Getenv("TOKEN"), "token of the bot")
 }
 
 func main() {
