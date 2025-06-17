@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	EditPreambleID = "edit_preamble"
+	EditPreambleID  = "edit_preamble"
+	ResetPreambleID = "reset_preamble"
 )
 
 var (
@@ -178,6 +179,13 @@ func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, optMap utils
 			Disabled: false,
 			Emoji:    &discordgo.ComponentEmoji{Name: "✏️"},
 			CustomID: EditPreambleID,
+		},
+		discordgo.Button{
+			Label:    "Reset",
+			Style:    discordgo.DangerButton,
+			Disabled: false,
+			Emoji:    &discordgo.ComponentEmoji{Name: "🔄"},
+			CustomID: ResetPreambleID,
 		},
 	}}).Send()
 	if err != nil {
