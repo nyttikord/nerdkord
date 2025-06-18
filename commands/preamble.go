@@ -123,13 +123,7 @@ func OnResetPromptPreambleButton(s *discordgo.Session, i *discordgo.InteractionC
 		return
 	}
 
-	nerd.Preamble, err = getDefaultPreamble()
-	if err != nil {
-		if err = resp.SetMessage("An error occurred. Please report the bug.").Send(); err != nil {
-			utils.SendAlert("commands/preamble.go - Sending error occurred while parsing template", err.Error())
-		}
-		return
-	}
+	nerd.Preamble = ""
 
 	err = nerd.Save()
 	if err != nil {
