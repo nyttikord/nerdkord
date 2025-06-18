@@ -20,11 +20,11 @@ Now, you can start the bot.
 It is also possible to compile it with Go 1.24+.
 You must have texlive (packages `texlive texlive-binextra texlive-dvi xdvik texmf-dist-full` for Alpine Linux) installed
 to run the bot.
-Currently, you must pass your token in the argument `-token`, e.g.
+The token can be passed via the argument `-token`, e.g.
 ```bash
 $ ./bot -token your_token
 ```
-Later we will support environment variable to load the token.
+or via the environment variable `TOKEN` (in a `.env` file or directly in your environment variables)
 
 ## Configuration
 
