@@ -40,6 +40,15 @@ func OnEditPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	nerd, err := data.GetNerd(u.ID)
 	if err != nil {
 		utils.SendWarn("Getting nerd profile", "err", err.Error(), "discord_id", u.ID)
+
+		val, err = getDefaultPreamble()
+		if err == nil {
+			utils.SendDebug("Using default preamble as placeholder")
+		} else {
+			utils.SendAlert("commands/preamble.go - Getting default preamble", err.Error())
+			utils.SendDebug("Using empty preamble")
+			val = ""
+		}
 	} else {
 		val = nerd.Preamble
 		if len(nerd.Preamble) == 0 {
