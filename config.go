@@ -8,13 +8,22 @@ import (
 )
 
 type Config struct {
-	Debug    bool   `toml:"debug"`
-	Author   string `toml:"author"`
-	Database string `toml:"database"`
+	Debug       bool            `toml:"debug"`
+	Author      string          `toml:"author"`
+	UsePostgres bool            `toml:"use_postgres_instead_of_sqlite"`
+	SQLite      *SQLiteConfig   `toml:"sqlite"`
+	Postgres    *PostgresConfig `toml:"postgres"`
+}
+
+type SQLiteConfig struct {
+	Path string `toml:"path"`
+}
+
+type PostgresConfig struct {
 }
 
 func (c *Config) Connect() (*gorm.DB, error) {
-	return gorm.Open(sqlite.Open(c.Database), &gorm.Config{})
+	return gorm.Open(sqlite.Open(c.SQLite.Path), &gorm.Config{})
 }
 
 func (c *Config) IsDebug() bool {
@@ -36,7 +45,8 @@ func (c *Config) GetSQLCredentials() gokord.SQLCredentials {
 func (c *Config) SetDefaultValues() {
 	c.Debug = false
 	c.Author = "nyttikord"
-	c.Database = "nerdkord.db"
+	c.UsePostgres = false
+	c.SQLite = &SQLiteConfig{"nerdkord.db"}
 }
 
 func (c *Config) Marshal() ([]byte, error) {
