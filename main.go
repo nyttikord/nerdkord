@@ -87,7 +87,7 @@ func main() {
 			"The number of digits you want. Default : 6")).
 		SetHandler(commands.Calculate)
 
-	profile := gokord.NewCommand("preamble", "Show and edit your preamble").
+	preamble := gokord.NewCommand("preamble", "Show and edit your preamble").
 		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
 		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
 		AddContext(discordgo.InteractionContextGuild).
@@ -112,7 +112,7 @@ func main() {
 			},
 		},
 		Commands: []gokord.CommandBuilder{
-			latexCmd, latexifyCmd, calculateCmd, profile,
+			latexCmd, latexifyCmd, calculateCmd, preamble,
 		},
 		AfterInit:   afterInit,
 		Innovations: innovations,
