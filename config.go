@@ -35,11 +35,12 @@ type PostgresConfig struct {
 	Password string `toml:"password"`
 	DBName   string `toml:"db_name"`
 	Port     int    `toml:"port"`
+	TimeZone string `toml:"time_zone"`
 }
 
 func (p *PostgresConfig) generateDsn() string {
-	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Europe/Paris",
-		p.Host, p.User, p.Password, p.DBName, p.Port,
+	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=%s",
+		p.Host, p.User, p.Password, p.DBName, p.Port, p.TimeZone,
 	)
 }
 
@@ -49,10 +50,11 @@ func (p *PostgresConfig) Connect() (*gorm.DB, error) {
 
 func (p *PostgresConfig) SetDefaultValues() {
 	p.Host = "localhost"
-	p.User = ""
-	p.Password = ""
-	p.DBName = ""
+	p.User = "nerdkord"
+	p.Password = "password"
+	p.DBName = "nerdkord"
 	p.Port = 5432
+	p.TimeZone = "Europe/Paris"
 }
 
 func (c *Config) IsDebug() bool {
