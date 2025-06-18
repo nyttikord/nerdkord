@@ -7,6 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/data"
 	"github.com/nyttikord/nerdkord/libs/latex2png"
+	"image/color"
 	"strings"
 	"text/template"
 )
@@ -99,6 +100,7 @@ func OnResetPromptPreambleButton(s *discordgo.Session, i *discordgo.InteractionC
 					discordgo.Button{
 						Label:    "Yes, reset my preamble",
 						Style:    discordgo.DangerButton,
+						Emoji:    &discordgo.ComponentEmoji{Name: "⚠️"},
 						Disabled: false,
 						CustomID: ReallyResetPreambleID,
 					},
@@ -188,8 +190,8 @@ func OnPreambleModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate)
 		LatexBinary:          "latex",
 		DvipngBinary:         "dvipng",
 		OutputFormat:         latex2png.PNG,
-		BackgroundColor:      bgColor,
-		ForegroundColor:      fgColor,
+		BackgroundColor:      color.Black,
+		ForegroundColor:      color.Black,
 		ImageDPI:             10, // reduce DPI for faster results
 		PreprocessingOptions: defaultPreprocessingOptions,
 	})
@@ -246,14 +248,14 @@ func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, _ utils.Opti
 	}).AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
 		discordgo.Button{
 			Label:    "Edit",
-			Style:    discordgo.PrimaryButton,
+			Style:    discordgo.SecondaryButton,
 			Disabled: false,
 			Emoji:    &discordgo.ComponentEmoji{Name: "✏️"},
 			CustomID: EditPreambleID,
 		},
 		discordgo.Button{
 			Label:    "Reset",
-			Style:    discordgo.DangerButton,
+			Style:    discordgo.SecondaryButton,
 			Disabled: false,
 			Emoji:    &discordgo.ComponentEmoji{Name: "🔄"},
 			CustomID: ResetPreambleID,
