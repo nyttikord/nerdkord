@@ -103,7 +103,6 @@ func OnResetPromptPreambleButton(s *discordgo.Session, i *discordgo.InteractionC
 						CustomID: ReallyResetPreambleID,
 					},
 				},
-				ID: 0,
 			}).Send()
 
 		if err != nil {
