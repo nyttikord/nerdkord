@@ -80,6 +80,12 @@ func (c *Config) SetDefaultValues() {
 	c.Debug = false
 	c.Author = "nyttikord"
 	c.UsePostgres = false
+
+	c.Postgres = &PostgresConfig{}
+	c.Postgres.SetDefaultValues()
+
+	c.SQLite = &SQLiteConfig{}
+	c.SQLite.SetDefaultValues()
 }
 
 func (c *Config) Marshal() ([]byte, error) {
