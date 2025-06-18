@@ -20,11 +20,11 @@ Now, you can start the bot.
 It is also possible to compile it with Go 1.24+.
 You must have texlive (packages `texlive texlive-binextra texlive-dvi xdvik texmf-dist-full` for Alpine Linux) installed
 to run the bot.
-Currently, you must pass your token in the argument `-token`, e.g.
+The token can be passed via the argument `-token`, e.g.
 ```bash
 $ ./bot -token your_token
 ```
-Later we will support environment variable to load the token.
+or via the environment variable `TOKEN` (in a `.env` file or directly in your environment variables)
 
 ## Configuration
 
@@ -33,11 +33,30 @@ The default file:
 ```toml
 debug = false
 author = 'nyttikord'
-database = 'nerdkord.db'
+use_postgres_instead_of_sqlite = false
+
+[sqlite]
+path = 'nerdkord.db'
+
+[postgres]
+host = 'localhost'
+user = 'nerdkord'
+password = 'password'
+db_name = 'nerdkord'
+port = 5432
+time_zone = 'Europe/Paris'
+
 ```
 - `debug` is true if the bot is in debug mode (:warning: does not support user-side installs if this is true!)
 - `author` is the host of the bot
-- `database` is a path the database file (it's a SQLite3 file)
+- `use_postgres_instead_of_sqlite` is true if the bot must use PostreSQL instead of SQLite3
+- `[sqlite].path` is a path to the SQLite3 file
+- `[postgres].host` is the host of PostgreSQL
+- `[postgres].user` is the user to use
+- `[postgres].password` is the user's password
+- `[postgres].db_name` is the name of the DB to use
+- `[postgres].port` is the port of PostreSQL
+- `[postgres].time_zone` is the timezone to use with PostgreSQL
 
 ## Technologies
 
