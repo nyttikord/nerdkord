@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
-	"github.com/nyttikord/nerdkord/data"
+	"github.com/nyttikord/nerdkord/db"
 	"github.com/nyttikord/nerdkord/libs/latex2png"
 	"image/color"
 	"strings"
@@ -38,7 +38,7 @@ func OnEditPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		u = i.Member.User
 	}
 	var val string
-	nerd, err := data.GetNerd(u.ID)
+	nerd, err := db.GetNerd(u.ID)
 	if err != nil {
 		utils.SendWarn("Getting nerd profile", "err", err.Error(), "discord_id", u.ID)
 
@@ -124,7 +124,7 @@ func OnResetPromptPreambleButton(s *discordgo.Session, i *discordgo.InteractionC
 	} else {
 		u = i.User
 	}
-	nerd, err := data.GetNerd(u.ID)
+	nerd, err := db.GetNerd(u.ID)
 	if err != nil {
 		utils.SendAlert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your preamble. Please report the bug.").Send(); err != nil {
@@ -164,7 +164,7 @@ func OnPreambleModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate)
 	} else {
 		u = i.User
 	}
-	nerd, err := data.GetNerd(u.ID)
+	nerd, err := db.GetNerd(u.ID)
 	if err != nil {
 		utils.SendAlert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your preamble. Please report the bug.").Send(); err != nil {
@@ -224,7 +224,7 @@ func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, _ utils.Opti
 	} else {
 		u = i.User
 	}
-	nerd, err := data.GetNerd(u.ID)
+	nerd, err := db.GetNerd(u.ID)
 	if err != nil {
 		utils.SendAlert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your preamble. Please report.").Send(); err != nil {

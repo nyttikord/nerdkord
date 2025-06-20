@@ -1,4 +1,4 @@
-package data
+package db
 
 import "github.com/anhgelus/gokord"
 

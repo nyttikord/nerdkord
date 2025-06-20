@@ -9,7 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	"github.com/nyttikord/nerdkord/commands"
-	"github.com/nyttikord/nerdkord/data"
+	"github.com/nyttikord/nerdkord/db"
 	"os"
 )
 
@@ -41,7 +41,7 @@ func main() {
 		panic(err)
 	}
 
-	err = gokord.DB.AutoMigrate(&data.Nerd{})
+	err = gokord.DB.AutoMigrate(&db.Nerd{})
 	if err != nil {
 		panic(err)
 	}

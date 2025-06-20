@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/anhgelus/gokord/utils"
 	"github.com/bwmarrin/discordgo"
-	"github.com/nyttikord/nerdkord/data"
+	"github.com/nyttikord/nerdkord/db"
 	"github.com/nyttikord/nerdkord/libs/img"
 	"github.com/nyttikord/nerdkord/libs/latex2png"
 	"image/color"
@@ -59,7 +59,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		u = i.User
 	}
 
-	nerd, err := data.GetNerd(u.ID)
+	nerd, err := db.GetNerd(u.ID)
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your profile. Please report the bug.").Send(); err != nil {
