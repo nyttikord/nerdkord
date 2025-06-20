@@ -3,9 +3,9 @@ package latex2png
 import (
 	"bytes"
 	"errors"
-	"html/template"
 	"regexp"
 	"strings"
+	"text/template"
 )
 
 type PreprocessingResult struct {
