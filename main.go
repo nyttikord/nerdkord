@@ -16,7 +16,7 @@ import (
 var (
 	token   string
 	Version = &gokord.Version{
-		Major: 0,
+		Major: 1,
 		Minor: 0,
 		Patch: 0,
 	}
