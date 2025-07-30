@@ -2,7 +2,7 @@
 
 > [!NOTE]
 > This privacy is a template for custom hosting. 
-> The real policy used by the official bot is available [here](https://cdn.anhgelus.world/md/nerdkord-privacy.md).
+> The real policy used by the official bot is available [here](https://cdn.anhgelus.world/md/nerdkord-privacy.md?v).
  
 The Discord bot called "nerdkord" ("bot") follows this privacy policy.
 
@@ -12,8 +12,8 @@ The bot is hosted by <YOUR HOST>.
 
 The bot interacts with the Discord API.
 We are collecting:
-- your display name (e.g., "Anhgelus Morhtuuzh") and your username (e.g., "anhgelus");
-- your Discord user ID (e.g., 394089252733976576);
+- your display name (e.g., `Anhgelus Morhtuuzh`) and your username (e.g., `anhgelus`);
+- your Discord user ID (e.g., `394089252733976576`);
 - every information given by you to the bot via Discord's modals or Discord's slash commands;
 - every message sent to a guild where the bot is present and is connected;
 - other information sent by Discord that we cannot disable.
@@ -39,7 +39,7 @@ Every message sent to the guilds is used to:
 
 ## Data retention and your rights
 
-Data is saved as long as necessary.
+Data are saved as long as necessary.
 
 As a user, you can:
 - delete a part or every data collected by the bot
