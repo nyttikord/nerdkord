@@ -57,6 +57,11 @@ func main() {
 		AddContext(discordgo.InteractionContextGuild).
 		AddContext(discordgo.InteractionContextPrivateChannel).
 		AddContext(discordgo.InteractionContextBotDM).
+		AddOption(gokord.NewOption(
+			discordgo.ApplicationCommandOptionString,
+			"source",
+			"LaTeX source code",
+		)).
 		SetHandler(commands.Latex)
 
 	latexifyCmd := gokord.NewCommand("latexify", "Converts a math expression to latex").
