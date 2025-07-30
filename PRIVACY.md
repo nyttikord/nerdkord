@@ -31,7 +31,7 @@ Every information given by you via Discord's modals or Discord's slash commands 
 - convert your input to LaTeX
 - do the calculations described by your input
 
-Every data related to your profile is saved. Every other one is not. 
+Every data related to your profile is saved. 
 
 Every message sent to the guilds is used to:
 - check if the message is a LaTeX source code
@@ -47,4 +47,4 @@ As a user, you can:
 - get the saved data
 - modify the saved data
 
-To exerce your right, contact <YOU> at <YOUR EMAIL>.
+To exerce your rights, contact <YOU> at <YOUR EMAIL>.
