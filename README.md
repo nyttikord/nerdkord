@@ -1,6 +1,6 @@
 # nerdkord
 
-nerdkord is a bot Discord for nerds.
+nerdkord is a Discord bot for nerds.
 It can be installed on server *and* user-side.
 Of course, nerdkord is easily self-hostable!
 
