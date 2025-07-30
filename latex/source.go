@@ -30,6 +30,21 @@ func saveSourceWithInteraction(s *discordgo.Session, i *discordgo.InteractionCre
 	})
 }
 
+func saveSourceWithMessage(s *discordgo.Session, m *discordgo.Message, source string) {
+	saveSource(s, m, source, func(s *discordgo.Session) {
+		_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+			Content:     &m.Content,
+			Components:  nil,
+			Attachments: &m.Attachments,
+			ID:          m.ID,
+			Channel:     m.ChannelID,
+		})
+		if err != nil {
+			utils.SendAlert("commands/latex.go - Cannot remove source button", err.Error())
+		}
+	})
+}
+
 func saveSource(s *discordgo.Session, m *discordgo.Message, source string, fn func(s *discordgo.Session)) {
 	k := fmt.Sprintf("%s:%s", m.ChannelID, m.ID)
 	sourceMap[k] = &source
