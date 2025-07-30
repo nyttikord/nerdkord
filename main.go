@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/nyttikord/nerdkord/commands"
 	"github.com/nyttikord/nerdkord/db"
+	"github.com/nyttikord/nerdkord/latex"
 	"os"
 )
 
@@ -135,4 +136,6 @@ func afterInit(dg *discordgo.Session) {
 	dg.AddHandler(commands.OnEditPreambleButton)
 	dg.AddHandler(commands.OnResetPromptPreambleButton)
 	dg.AddHandler(commands.OnPreambleModalSubmit)
+	//event: latex
+	dg.AddHandler(latex.HandleLatexSourceCode)
 }

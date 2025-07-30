@@ -24,28 +24,10 @@ var (
 	}
 )
 
-func RenderLatex(s *discordgo.Session, i *discordgo.InteractionCreate, resp *utils.ResponseBuilder, source string, getSourceID string) {
-	err := resp.Send()
-	if err != nil {
-		utils.SendAlert("commands/latex.go - Sending deferred", err.Error())
-		return
-	}
-	resp.IsEphemeral()
-
-	var u *discordgo.User
-	if i.User == nil {
-		u = i.Member.User
-	} else {
-		u = i.User
-	}
-
+func RenderLatex(u *discordgo.User, source string) (*bytes.Buffer, error) {
 	nerd, err := db.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Getting nerd", err.Error(), "discord_id", u.ID)
-		if err = resp.SetMessage("Error while getting your profile. Please report the bug.").Send(); err != nil {
-			utils.SendAlert("commands/latex.go - Sending error getting nerd", err.Error())
-		}
-		return
+		return nil, err
 	}
 
 	file := new(bytes.Buffer)
@@ -62,32 +44,41 @@ func RenderLatex(s *discordgo.Session, i *discordgo.InteractionCreate, resp *uti
 	})
 
 	if err != nil {
-		handleLatexRenderError(s, i, resp, source, getSourceID, err)
-		return
+		return nil, err
 	}
 
 	latexImage, err := png.Decode(file)
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Error while decoding dvipng output image", err.Error())
-		err = resp.
-			SetMessage("An error occurred while running this command. Try again later, or contact a bot developer").
-			Send()
-		if err != nil {
-			utils.SendAlert("commands/latex.go - Sending decoding error", err.Error())
-		}
-		return
+		return nil, err
 	}
 
 	output := new(bytes.Buffer)
 	err = png.Encode(output, img.Pad(latexImage, 5+int(math.Ceil(float64(latexImage.Bounds().Dx())*(1./100.))), bgColor))
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Error while encoding padded image", err.Error())
-		err = resp.
-			SetMessage("An error occurred while running this command. Try again later, or contact a bot developer").
-			Send()
-		if err != nil {
-			utils.SendAlert("commands/latex.go - Sending encoding error", err.Error())
-		}
+		return nil, err
+	}
+	return output, nil
+}
+
+func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, resp *utils.ResponseBuilder, source string, getSourceID string) {
+	err := resp.Send()
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Sending deferred", err.Error())
+		return
+	}
+	resp.IsEphemeral()
+
+	var u *discordgo.User
+	if i.User == nil {
+		u = i.Member.User
+	} else {
+		u = i.User
+	}
+
+	output, err := RenderLatex(u, source)
+
+	if err != nil {
+		handleLatexRenderError(s, i, resp, source, getSourceID, err)
 		return
 	}
 
@@ -153,7 +144,7 @@ func handleLatexRenderError(s *discordgo.Session, i *discordgo.InteractionCreate
 	}
 
 	utils.SendAlert("commands/latex.go - Compiling latex", err.Error())
-	err = resp.SetMessage("Unexpected error while compiling latex").Send()
+	err = resp.SetMessage("Unexpected error while compiling latex. Please report.").Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending unexpected latex error", err.Error())
 	}
