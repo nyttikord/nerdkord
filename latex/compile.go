@@ -62,50 +62,7 @@ func RenderLatex(s *discordgo.Session, i *discordgo.InteractionCreate, resp *uti
 	})
 
 	if err != nil {
-		if errors.As(err, &latex2png.ErrLatexCompilation{}) {
-			utils.SendDebug("commands/latex.go - Latex compilation error")
-
-			if len(err.Error()) > 1950 {
-				resp.SetMessage("⚠️ Compilation error").AddFile(
-					&discordgo.File{
-						Name:        "error.txt",
-						ContentType: "text/plain",
-						Reader:      bytes.NewReader([]byte(err.Error())),
-					},
-				)
-			} else {
-				resp.SetMessage("⚠️ Compilation error:\n```\n" + err.Error() + "\n```")
-			}
-			err = resp.IsEphemeral().AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
-				discordgo.Button{
-					Label:    "",
-					Style:    discordgo.SecondaryButton,
-					Disabled: false,
-					Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
-					CustomID: getSourceID,
-				},
-			}}).Send()
-			if err != nil {
-				utils.SendAlert("commands/latex.go - Sending compilation error", err.Error())
-			}
-
-			saveSource(s, i, source)
-			return
-		}
-		if errors.Is(err, latex2png.ErrPreprocessor) {
-			utils.SendDebug("commands/latex.go - Preprocessing error")
-			err = resp.SetMessage("```\n" + err.Error() + "\n```").Send()
-			if err != nil {
-				utils.SendAlert("commands/latex.go - Sending preprocessing error", err.Error())
-			}
-			return
-		}
-
-		utils.SendAlert("commands/latex.go - Compiling latex", err.Error())
-		err = resp.SetMessage("Unexpected error while compiling latex").Send()
-		if err != nil {
-			utils.SendAlert("commands/latex.go - Sending unexpected latex error", err.Error())
-		}
+		handleLatexRenderError(s, i, resp, source, getSourceID, err)
 		return
 	}
 
@@ -153,4 +110,51 @@ func RenderLatex(s *discordgo.Session, i *discordgo.InteractionCreate, resp *uti
 	}
 	// saving source
 	saveSource(s, i, source)
+}
+
+func handleLatexRenderError(s *discordgo.Session, i *discordgo.InteractionCreate, resp *utils.ResponseBuilder, source string, getSourceID string, err error) {
+	if errors.As(err, &latex2png.ErrLatexCompilation{}) {
+		utils.SendDebug("commands/latex.go - Latex compilation error")
+
+		if len(err.Error()) > 1950 {
+			resp.SetMessage("⚠️ Compilation error").AddFile(
+				&discordgo.File{
+					Name:        "error.txt",
+					ContentType: "text/plain",
+					Reader:      bytes.NewReader([]byte(err.Error())),
+				},
+			)
+		} else {
+			resp.SetMessage("⚠️ Compilation error:\n```\n" + err.Error() + "\n```")
+		}
+		err = resp.IsEphemeral().AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+			discordgo.Button{
+				Label:    "",
+				Style:    discordgo.SecondaryButton,
+				Disabled: false,
+				Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
+				CustomID: getSourceID,
+			},
+		}}).Send()
+		if err != nil {
+			utils.SendAlert("commands/latex.go - Sending compilation error", err.Error())
+		}
+
+		saveSource(s, i, source)
+		return
+	}
+	if errors.Is(err, latex2png.ErrPreprocessor) {
+		utils.SendDebug("commands/latex.go - Preprocessing error")
+		err = resp.SetMessage("```\n" + err.Error() + "\n```").Send()
+		if err != nil {
+			utils.SendAlert("commands/latex.go - Sending preprocessing error", err.Error())
+		}
+		return
+	}
+
+	utils.SendAlert("commands/latex.go - Compiling latex", err.Error())
+	err = resp.SetMessage("Unexpected error while compiling latex").Send()
+	if err != nil {
+		utils.SendAlert("commands/latex.go - Sending unexpected latex error", err.Error())
+	}
 }
