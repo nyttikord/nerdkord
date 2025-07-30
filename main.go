@@ -100,6 +100,14 @@ func main() {
 		AddContext(discordgo.InteractionContextBotDM).
 		SetHandler(commands.Preamble)
 
+	about := gokord.NewCommand("about", "About the bot").
+		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
+		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
+		AddContext(discordgo.InteractionContextGuild).
+		AddContext(discordgo.InteractionContextPrivateChannel).
+		AddContext(discordgo.InteractionContextBotDM).
+		SetHandler(commands.About)
+
 	bot := gokord.Bot{
 		Token: token,
 		Status: []*gokord.Status{
@@ -117,7 +125,7 @@ func main() {
 			},
 		},
 		Commands: []gokord.CommandBuilder{
-			latexCmd, latexifyCmd, calculateCmd, preamble,
+			latexCmd, latexifyCmd, calculateCmd, preamble, about,
 		},
 		AfterInit:   afterInit,
 		Innovations: innovations,
