@@ -63,7 +63,7 @@ func RenderLatex(u *discordgo.User, source string) (*bytes.Buffer, error) {
 func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, resp *utils.ResponseBuilder, source string, getSourceID string) {
 	err := resp.Send()
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Sending deferred", err.Error())
+		utils.SendAlert("latex/compile.go - Sending deferred", err.Error())
 		return
 	}
 	resp.IsEphemeral()
@@ -78,7 +78,20 @@ func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, r
 	output, err := RenderLatex(u, source)
 
 	if err != nil {
-		handleLatexRenderError(s, i, resp, source, getSourceID, err)
+		ms, save := handleLatexRenderError(getSourceID, err)
+		if save {
+			saveSourceWithInteraction(s, i, source)
+		}
+		resp.IsEphemeral().SetMessage(ms.Content)
+		for _, f := range ms.Files {
+			resp.AddFile(f)
+		}
+		for _, c := range ms.Components {
+			resp.AddComponent(c)
+		}
+		if err = resp.Send(); err != nil {
+			utils.SendAlert("latex/compile.go - Sending latex compiling error", err.Error())
+		}
 		return
 	}
 
@@ -96,56 +109,49 @@ func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, r
 		},
 	}}).Send()
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Sending latex", err.Error())
+		utils.SendAlert("latex/compile.go - Sending latex", err.Error())
 		return
 	}
 	// saving source
-	saveSource(s, i, source)
+	saveSourceWithInteraction(s, i, source)
 }
 
-func handleLatexRenderError(s *discordgo.Session, i *discordgo.InteractionCreate, resp *utils.ResponseBuilder, source string, getSourceID string, err error) {
+func handleLatexRenderError(getSourceID string, err error) (*discordgo.MessageSend, bool) {
 	if errors.As(err, &latex2png.ErrLatexCompilation{}) {
-		utils.SendDebug("commands/latex.go - Latex compilation error")
+		utils.SendDebug("latex/compile.go - Latex compilation error")
+
+		msg := &discordgo.MessageSend{}
 
 		if len(err.Error()) > 1950 {
-			resp.SetMessage("⚠️ Compilation error").AddFile(
-				&discordgo.File{
+			return &discordgo.MessageSend{
+				Content: "⚠️ Compilation error",
+				Files: []*discordgo.File{{
 					Name:        "error.txt",
 					ContentType: "text/plain",
 					Reader:      bytes.NewReader([]byte(err.Error())),
-				},
-			)
+				}},
+			}, false
 		} else {
-			resp.SetMessage("⚠️ Compilation error:\n```\n" + err.Error() + "\n```")
+			msg.Content = "⚠️ Compilation error:\n```\n" + err.Error() + "\n```"
 		}
-		err = resp.IsEphemeral().AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
-			discordgo.Button{
-				Label:    "",
-				Style:    discordgo.SecondaryButton,
-				Disabled: false,
-				Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
-				CustomID: getSourceID,
-			},
-		}}).Send()
-		if err != nil {
-			utils.SendAlert("commands/latex.go - Sending compilation error", err.Error())
-		}
-
-		saveSource(s, i, source)
-		return
+		msg.Components = []discordgo.MessageComponent{discordgo.Button{
+			Label:    "",
+			Style:    discordgo.SecondaryButton,
+			Disabled: false,
+			Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
+			CustomID: getSourceID,
+		}}
+		return msg, true
 	}
 	if errors.Is(err, latex2png.ErrPreprocessor) {
-		utils.SendDebug("commands/latex.go - Preprocessing error")
-		err = resp.SetMessage("```\n" + err.Error() + "\n```").Send()
-		if err != nil {
-			utils.SendAlert("commands/latex.go - Sending preprocessing error", err.Error())
-		}
-		return
+		utils.SendDebug("latex/compile.go - Preprocessing error")
+		return &discordgo.MessageSend{
+			Content: "```\n" + err.Error() + "\n```",
+		}, false
 	}
 
-	utils.SendAlert("commands/latex.go - Compiling latex", err.Error())
-	err = resp.SetMessage("Unexpected error while compiling latex. Please report.").Send()
-	if err != nil {
-		utils.SendAlert("commands/latex.go - Sending unexpected latex error", err.Error())
-	}
+	utils.SendAlert("latex/compile.go - Compiling latex", err.Error())
+	return &discordgo.MessageSend{
+		Content: "Unexpected error while compiling latex. Please report.",
+	}, false
 }
