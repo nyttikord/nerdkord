@@ -1,6 +1,6 @@
 services:
   bot:
-    build: .
+    image: ghcr.io/nyttikord/nerdkord:v1.0.0
     restart: always
     env_file:
       - .env
