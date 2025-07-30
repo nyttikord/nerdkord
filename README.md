@@ -4,6 +4,8 @@ nerdkord is a bot Discord for nerds.
 It can be installed on server *and* user-side.
 Of course, nerdkord is easily self-hostable!
 
+A template of the privacy policy is available [here](/PRIVACY.md). 
+
 ## Features
 
 - $\LaTeX$ render
