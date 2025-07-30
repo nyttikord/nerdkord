@@ -45,6 +45,13 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	resp := utils.NewResponseBuilder(s, i).IsDeferred()
+
+	latexSource := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
+
+	renderLatex(s, i, resp, latexSource)
+}
+
+func renderLatex(s *discordgo.Session, i *discordgo.InteractionCreate, resp *utils.ResponseBuilder, source string) {
 	err := resp.Send()
 	if err != nil {
 		utils.SendAlert("commands/latex.go - Sending deferred", err.Error())
@@ -68,12 +75,10 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	latexSource := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
-
 	file := new(bytes.Buffer)
 	opt := &*defaultPreprocessingOptions
 	opt.UserPreamble = nerd.Preamble
-	err = latex2png.Compile(file, latexSource, &latex2png.Options{
+	err = latex2png.Compile(file, source, &latex2png.Options{
 		LatexBinary:          "latex",
 		DvipngBinary:         "dvipng",
 		OutputFormat:         latex2png.PNG,
@@ -111,7 +116,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				utils.SendAlert("commands/latex.go - Sending compilation error", err.Error())
 			}
 
-			saveSource(s, i, latexSource)
+			saveSource(s, i, source)
 			return
 		}
 		if errors.Is(err, latex2png.ErrPreprocessor) {
@@ -174,7 +179,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	// saving source
-	saveSource(s, i, latexSource)
+	saveSource(s, i, source)
 }
 
 func saveSource(s *discordgo.Session, i *discordgo.InteractionCreate, latexSource string) {
@@ -233,7 +238,12 @@ func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func Latex(_ *discordgo.Session, _ *discordgo.InteractionCreate, _ utils.OptionMap, resp *utils.ResponseBuilder) {
+func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, o utils.OptionMap, resp *utils.ResponseBuilder) {
+	source, ok := o["source"]
+	if ok {
+		renderLatex(s, i, resp, source.StringValue())
+		return
+	}
 	err := resp.SetCustomID(LaTeXModalID).
 		IsModal().
 		SetTitle("LaTeX compiler").
