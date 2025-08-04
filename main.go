@@ -52,7 +52,7 @@ func main() {
 		panic(err)
 	}
 
-	latexCmd := cmd.NewCommand("latex", "Compiles latex source").
+	latexCmd := cmd.New("latex", "Compiles latex source").
 		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
 		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
 		AddContext(discordgo.InteractionContextGuild).
@@ -65,7 +65,7 @@ func main() {
 		)).
 		SetHandler(commands.Latex)
 
-	latexifyCmd := cmd.NewCommand("latexify", "Converts a math expression to latex").
+	latexifyCmd := cmd.New("latexify", "Converts a math expression to latex").
 		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
 		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
 		AddContext(discordgo.InteractionContextGuild).
@@ -77,7 +77,7 @@ func main() {
 			"The math expression to convert").IsRequired()).
 		SetHandler(commands.Latexify)
 
-	calculateCmd := cmd.NewCommand("calculate", "Parses and evaluates a math expression").
+	calculateCmd := cmd.New("calculate", "Parses and evaluates a math expression").
 		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
 		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
 		AddContext(discordgo.InteractionContextGuild).
@@ -93,7 +93,7 @@ func main() {
 			"The number of digits you want. Default : 6")).
 		SetHandler(commands.Calculate)
 
-	preamble := cmd.NewCommand("preamble", "Show and edit your preamble").
+	preamble := cmd.New("preamble", "Show and edit your preamble").
 		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
 		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
 		AddContext(discordgo.InteractionContextGuild).
@@ -101,7 +101,7 @@ func main() {
 		AddContext(discordgo.InteractionContextBotDM).
 		SetHandler(commands.Preamble)
 
-	about := cmd.NewCommand("about", "About the bot").
+	about := cmd.New("about", "About the bot").
 		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
 		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
 		AddContext(discordgo.InteractionContextGuild).
@@ -128,20 +128,18 @@ func main() {
 		Commands: []cmd.CommandBuilder{
 			latexCmd, latexifyCmd, calculateCmd, preamble, about,
 		},
-		AfterInit:   afterInit,
 		Innovations: innovations,
 		Version:     Version,
 		Intents:     discordgo.IntentsAllWithoutPrivileged,
 	}
-	bot.Start()
-}
 
-func afterInit(dg *discordgo.Session) {
 	//commands: latex
-	dg.AddHandler(commands.OnLatexModalSubmit)
-	dg.AddHandler(commands.OnSourceButton)
+	bot.HandleModal(commands.OnLatexModalSubmit, commands.LaTeXModalID)
+	bot.HandleMessageComponent(commands.OnSourceButton, commands.GetSourceID)
 	//commands: preamble
-	dg.AddHandler(commands.OnEditPreambleButton)
-	dg.AddHandler(commands.OnResetPromptPreambleButton)
-	dg.AddHandler(commands.OnPreambleModalSubmit)
+	bot.HandleMessageComponent(commands.OnEditPreambleButton, commands.EditPreambleID)
+	bot.HandleMessageComponent(commands.OnResetPromptPreambleButton, commands.ResetPreambleID)
+	bot.HandleMessageComponent(commands.OnReallyResetPromptPreambleButton, commands.ReallyResetPreambleID)
+
+	bot.Start()
 }

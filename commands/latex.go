@@ -34,21 +34,8 @@ const (
 	GetSourceID  = "latex_source"
 )
 
-func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type != discordgo.InteractionModalSubmit {
-		return
-	}
-
-	submitData := i.ModalSubmitData()
-	if submitData.CustomID != LaTeXModalID {
-		logger.Debug("commands/latex.go - not a latex modal ID")
-		return
-	}
-
-	resp := cmd.NewResponseBuilder(s, i).IsDeferred()
-
-	latexSource := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
-
+func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate, data discordgo.ModalSubmitInteractionData, resp *cmd.ResponseBuilder) {
+	latexSource := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 	renderLatex(s, i, resp, latexSource)
 }
 
@@ -203,17 +190,8 @@ func saveSource(s *discordgo.Session, i *discordgo.InteractionCreate, latexSourc
 	}(s, i, k)
 }
 
-func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type != discordgo.InteractionMessageComponent {
-		return
-	}
-
-	submitData := i.MessageComponentData()
-	if submitData.CustomID != GetSourceID {
-		logger.Debug("commands/latex.go - not a source button ID")
-		return
-	}
-	resp := cmd.NewResponseBuilder(s, i).IsEphemeral()
+func OnSourceButton(_ *discordgo.Session, i *discordgo.InteractionCreate, _ discordgo.MessageComponentInteractionData, resp *cmd.ResponseBuilder) {
+	resp.IsEphemeral()
 	k := fmt.Sprintf("%s:%s", i.ChannelID, i.Message.ID)
 	source, ok := sourceMap[k]
 	if !ok {

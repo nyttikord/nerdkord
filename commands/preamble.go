@@ -23,15 +23,7 @@ var (
 	defaultPreamble = ""
 )
 
-func OnEditPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type != discordgo.InteractionMessageComponent {
-		return
-	}
-	componentData := i.MessageComponentData()
-	if componentData.CustomID != EditPreambleID {
-		logger.Debug("commands/preamble.go - not a profile button ID")
-		return
-	}
+func OnEditPreambleButton(_ *discordgo.Session, i *discordgo.InteractionCreate, _ discordgo.MessageComponentInteractionData, resp *cmd.ResponseBuilder) {
 	var u *discordgo.User
 	if i.User != nil {
 		u = i.User
@@ -60,8 +52,7 @@ func OnEditPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			}
 		}
 	}
-	err = cmd.NewResponseBuilder(s, i).
-		IsModal().
+	err = resp.IsModal().
 		SetTitle("Edit preamble").
 		SetCustomID(EditPreambleID).
 		AddComponent(discordgo.ActionsRow{Components: []discordgo.MessageComponent{
@@ -77,48 +68,32 @@ func OnEditPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			},
 		}}).Send()
 	if err != nil {
-		var u *discordgo.User
-		if i.User == nil {
-			u = i.Member.User
-		} else {
-			u = i.User
-		}
 		logger.Alert("commands/preamble.go - Sending modal to edit preamble", err.Error(), "discord_id", u.ID)
 	}
 }
 
-func OnResetPromptPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type != discordgo.InteractionMessageComponent {
-		return
-	}
-	componentData := i.MessageComponentData()
-	if componentData.CustomID == ResetPreambleID {
-		err := cmd.NewResponseBuilder(s, i).
-			IsEphemeral().
-			SetMessage("Are you sure you want to reset your preamble ?").
-			AddComponent(&discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label:    "Yes, reset my preamble",
-						Style:    discordgo.DangerButton,
-						Emoji:    &discordgo.ComponentEmoji{Name: "⚠️"},
-						Disabled: false,
-						CustomID: ReallyResetPreambleID,
-					},
+func OnResetPromptPreambleButton(_ *discordgo.Session, _ *discordgo.InteractionCreate, _ discordgo.MessageComponentInteractionData, resp *cmd.ResponseBuilder) {
+	err := resp.IsEphemeral().
+		SetMessage("Are you sure you want to reset your preamble ?").
+		AddComponent(&discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "Yes, reset my preamble",
+					Style:    discordgo.DangerButton,
+					Emoji:    &discordgo.ComponentEmoji{Name: "⚠️"},
+					Disabled: false,
+					CustomID: ReallyResetPreambleID,
 				},
-			}).Send()
+			},
+		}).Send()
 
-		if err != nil {
-			logger.Alert("commands/preamble.go - Sending reset confirmation", err.Error())
-		}
-		return
+	if err != nil {
+		logger.Alert("commands/preamble.go - Sending reset confirmation", err.Error())
 	}
-	if componentData.CustomID != ReallyResetPreambleID {
-		logger.Debug("commands/preamble.go - not a reset button ID")
-		return
-	}
+}
 
-	resp := cmd.NewResponseBuilder(s, i).IsEphemeral()
+func OnReallyResetPromptPreambleButton(_ *discordgo.Session, i *discordgo.InteractionCreate, _ discordgo.MessageComponentInteractionData, resp *cmd.ResponseBuilder) {
+	resp.IsEphemeral()
 	var u *discordgo.User
 	if i.User == nil {
 		u = i.Member.User
