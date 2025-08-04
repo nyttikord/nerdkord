@@ -3,7 +3,8 @@ package commands
 import (
 	"bytes"
 	"fmt"
-	"github.com/anhgelus/gokord/utils"
+	"github.com/anhgelus/gokord/cmd"
+	"github.com/anhgelus/gokord/logger"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/db"
 	"github.com/nyttikord/nerdkord/libs/latex2png"
@@ -28,7 +29,7 @@ func OnEditPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	}
 	componentData := i.MessageComponentData()
 	if componentData.CustomID != EditPreambleID {
-		utils.SendDebug("commands/preamble.go - not a profile button ID")
+		logger.Debug("commands/preamble.go - not a profile button ID")
 		return
 	}
 	var u *discordgo.User
@@ -40,14 +41,14 @@ func OnEditPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	var val string
 	nerd, err := db.GetNerd(u.ID)
 	if err != nil {
-		utils.SendWarn("Getting nerd profile", "err", err.Error(), "discord_id", u.ID)
+		logger.Warn("Getting nerd profile", "err", err.Error(), "discord_id", u.ID)
 
 		val, err = getDefaultPreamble()
 		if err == nil {
-			utils.SendDebug("Using default preamble as placeholder")
+			logger.Debug("Using default preamble as placeholder")
 		} else {
-			utils.SendAlert("commands/preamble.go - Getting default preamble", err.Error())
-			utils.SendDebug("Using empty preamble")
+			logger.Alert("commands/preamble.go - Getting default preamble", err.Error())
+			logger.Debug("Using empty preamble")
 			val = ""
 		}
 	} else {
@@ -55,11 +56,11 @@ func OnEditPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		if len(nerd.Preamble) == 0 {
 			val, err = getDefaultPreamble()
 			if err != nil {
-				utils.SendWarn("Getting default preamble", "err", err.Error())
+				logger.Warn("Getting default preamble", "err", err.Error())
 			}
 		}
 	}
-	err = utils.NewResponseBuilder(s, i).
+	err = cmd.NewResponseBuilder(s, i).
 		IsModal().
 		SetTitle("Edit preamble").
 		SetCustomID(EditPreambleID).
@@ -82,7 +83,7 @@ func OnEditPreambleButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		} else {
 			u = i.User
 		}
-		utils.SendAlert("commands/preamble.go - Sending modal to edit preamble", err.Error(), "discord_id", u.ID)
+		logger.Alert("commands/preamble.go - Sending modal to edit preamble", err.Error(), "discord_id", u.ID)
 	}
 }
 
@@ -92,7 +93,7 @@ func OnResetPromptPreambleButton(s *discordgo.Session, i *discordgo.InteractionC
 	}
 	componentData := i.MessageComponentData()
 	if componentData.CustomID == ResetPreambleID {
-		err := utils.NewResponseBuilder(s, i).
+		err := cmd.NewResponseBuilder(s, i).
 			IsEphemeral().
 			SetMessage("Are you sure you want to reset your preamble ?").
 			AddComponent(&discordgo.ActionsRow{
@@ -108,16 +109,16 @@ func OnResetPromptPreambleButton(s *discordgo.Session, i *discordgo.InteractionC
 			}).Send()
 
 		if err != nil {
-			utils.SendAlert("commands/preamble.go - Sending reset confirmation", err.Error())
+			logger.Alert("commands/preamble.go - Sending reset confirmation", err.Error())
 		}
 		return
 	}
 	if componentData.CustomID != ReallyResetPreambleID {
-		utils.SendDebug("commands/preamble.go - not a reset button ID")
+		logger.Debug("commands/preamble.go - not a reset button ID")
 		return
 	}
 
-	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
+	resp := cmd.NewResponseBuilder(s, i).IsEphemeral()
 	var u *discordgo.User
 	if i.User == nil {
 		u = i.Member.User
@@ -126,9 +127,9 @@ func OnResetPromptPreambleButton(s *discordgo.Session, i *discordgo.InteractionC
 	}
 	nerd, err := db.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
+		logger.Alert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your preamble. Please report the bug.").Send(); err != nil {
-			utils.SendAlert("commands/preamble.go - Sending error getting nerd", err.Error())
+			logger.Alert("commands/preamble.go - Sending error getting nerd", err.Error())
 		}
 		return
 	}
@@ -137,14 +138,14 @@ func OnResetPromptPreambleButton(s *discordgo.Session, i *discordgo.InteractionC
 
 	err = nerd.Save()
 	if err != nil {
-		utils.SendAlert("commands/preamble.go - Resetting preamble", err.Error(), "discord_id", u.ID)
+		logger.Alert("commands/preamble.go - Resetting preamble", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while resetting your preamble. Please report the bug.").Send(); err != nil {
-			utils.SendAlert("commands/preamble.go - Sending error resetting preamble", err.Error())
+			logger.Alert("commands/preamble.go - Sending error resetting preamble", err.Error())
 		}
 		return
 	}
 	if err = resp.SetMessage("Preamble reset to default").Send(); err != nil {
-		utils.SendAlert("commands/preamble.go - Sending reset success", err.Error())
+		logger.Alert("commands/preamble.go - Sending reset success", err.Error())
 	}
 }
 
@@ -154,10 +155,10 @@ func OnPreambleModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate)
 	}
 	submitData := i.ModalSubmitData()
 	if submitData.CustomID != EditPreambleID {
-		utils.SendDebug("commands/preamble.go - not a profile modal ID")
+		logger.Debug("commands/preamble.go - not a profile modal ID")
 		return
 	}
-	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
+	resp := cmd.NewResponseBuilder(s, i).IsEphemeral()
 	var u *discordgo.User
 	if i.User == nil {
 		u = i.Member.User
@@ -166,9 +167,9 @@ func OnPreambleModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate)
 	}
 	nerd, err := db.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
+		logger.Alert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your preamble. Please report the bug.").Send(); err != nil {
-			utils.SendAlert("commands/preamble.go - Sending error getting nerd", err.Error())
+			logger.Alert("commands/preamble.go - Sending error getting nerd", err.Error())
 		}
 		return
 	}
@@ -176,15 +177,15 @@ func OnPreambleModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate)
 	val := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 	if strings.Contains(val, `\documentclass`) {
 		if err = resp.SetMessage("You can't use `\\documentclass`").Send(); err != nil {
-			utils.SendAlert("commands/preamble.go - Sending error \\documentclass is present", err.Error())
+			logger.Alert("commands/preamble.go - Sending error \\documentclass is present", err.Error())
 		}
 		return
 	}
 	if err = resp.IsDeferred().Send(); err != nil {
-		utils.SendAlert("commands/preamble.go - Sending deferred", err.Error(), "discord_id", u.ID)
+		logger.Alert("commands/preamble.go - Sending deferred", err.Error(), "discord_id", u.ID)
 		return
 	}
-	utils.SendDebug("Checking preamble's validity", "discord_id", u.ID)
+	logger.Debug("Checking preamble's validity", "discord_id", u.ID)
 	file := new(bytes.Buffer)
 	err = latex2png.Compile(file, "hey, this code was written by a furry", &latex2png.Options{
 		LatexBinary:          "latex",
@@ -197,26 +198,26 @@ func OnPreambleModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate)
 	})
 	if err != nil {
 		if err = resp.SetMessage("Your preamble is invalid.").Send(); err != nil {
-			utils.SendAlert("commands/preamble.go - Sending invalid preamble", err.Error())
+			logger.Alert("commands/preamble.go - Sending invalid preamble", err.Error())
 		}
 		return
 	}
-	utils.SendDebug("Updating nerd's preamble", "discord_id", u.ID)
+	logger.Debug("Updating nerd's preamble", "discord_id", u.ID)
 	nerd.Preamble = val
 	err = nerd.Save()
 	if err != nil {
-		utils.SendAlert("commands/preamble.go - Saving preamble", err.Error(), "discord_id", u.ID)
+		logger.Alert("commands/preamble.go - Saving preamble", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while saving your preamble. Please report the bug.").Send(); err != nil {
-			utils.SendAlert("commands/preamble.go - Sending error getting nerd", err.Error())
+			logger.Alert("commands/preamble.go - Sending error getting nerd", err.Error())
 		}
 		return
 	}
 	if err = resp.SetMessage("Preamble saved").Send(); err != nil {
-		utils.SendAlert("commands/preamble.go - Sending success", err.Error())
+		logger.Alert("commands/preamble.go - Sending success", err.Error())
 	}
 }
 
-func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, _ utils.OptionMap, resp *utils.ResponseBuilder) {
+func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, _ cmd.OptionMap, resp *cmd.ResponseBuilder) {
 	resp.IsEphemeral()
 	var u *discordgo.User
 	if i.User == nil {
@@ -226,9 +227,9 @@ func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, _ utils.Opti
 	}
 	nerd, err := db.GetNerd(u.ID)
 	if err != nil {
-		utils.SendAlert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
+		logger.Alert("commands/preamble.go - Getting nerd", err.Error(), "discord_id", u.ID)
 		if err = resp.SetMessage("Error while getting your preamble. Please report.").Send(); err != nil {
-			utils.SendAlert("commands/preamble.go - Getting nerd error", err.Error(), "discord_id", u.ID)
+			logger.Alert("commands/preamble.go - Getting nerd error", err.Error(), "discord_id", u.ID)
 		}
 		return
 	}
@@ -236,7 +237,7 @@ func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, _ utils.Opti
 		nerd.Preamble, err = getDefaultPreamble()
 		if err != nil {
 			if err = resp.SetMessage("An error occurred. Please report the bug.").Send(); err != nil {
-				utils.SendAlert("commands/preamble.go - Sending error occurred while parsing template", err.Error())
+				logger.Alert("commands/preamble.go - Sending error occurred while parsing template", err.Error())
 			}
 			return
 		}
@@ -262,7 +263,7 @@ func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, _ utils.Opti
 		},
 	}}).Send()
 	if err != nil {
-		utils.SendAlert("commands/preamble.go - Sending preamble", err.Error(), "discord_id", u.ID)
+		logger.Alert("commands/preamble.go - Sending preamble", err.Error(), "discord_id", u.ID)
 	}
 }
 
@@ -270,7 +271,7 @@ func getDefaultPreamble() (string, error) {
 	if len(defaultPreamble) == 0 {
 		t, err := template.ParseFiles(defaultPreprocessingOptions.TemplateFile)
 		if err != nil {
-			utils.SendAlert(
+			logger.Alert(
 				"commands/preamble.go - Parsing template file", err.Error(),
 				"path", defaultPreprocessingOptions.TemplateFile,
 			)

@@ -2,11 +2,12 @@ package commands
 
 import (
 	"github.com/anhgelus/gokord"
-	"github.com/anhgelus/gokord/utils"
+	"github.com/anhgelus/gokord/cmd"
+	"github.com/anhgelus/gokord/logger"
 	"github.com/bwmarrin/discordgo"
 )
 
-func About(_ *discordgo.Session, i *discordgo.InteractionCreate, _ utils.OptionMap, resp *utils.ResponseBuilder) {
+func About(_ *discordgo.Session, i *discordgo.InteractionCreate, _ cmd.OptionMap, resp *cmd.ResponseBuilder) {
 	var u *discordgo.User
 	if i.User == nil {
 		u = i.Member.User
@@ -18,6 +19,6 @@ func About(_ *discordgo.Session, i *discordgo.InteractionCreate, _ utils.OptionM
 		"Host of the bot: " + gokord.BaseCfg.GetAuthor() + ".\n\n" +
 		"Uses:\n- [Nyttikord/GoMath](<https://github.com/nyttikord/gomath>)\n" +
 		"- [anhgelus/gokord](<https://github.com/anhgelus/gokord>)").Send(); err != nil {
-		utils.SendAlert("commands/about.go - Error while sending about", err.Error(), "discord_id", u.ID)
+		logger.Alert("commands/about.go - Error while sending about", err.Error(), "discord_id", u.ID)
 	}
 }
