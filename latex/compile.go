@@ -79,7 +79,7 @@ func RenderLatex(u *discordgo.User, source string) (*bytes.Buffer, error) {
 	return output, nil
 }
 
-func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, resp *cmd.ResponseBuilder, source string, getSourceID string) {
+func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, resp *cmd.ResponseBuilder, source string) {
 	err := resp.IsDeferred().Send()
 	if err != nil {
 		logger.Alert("latex/compile.go - Sending deferred", err.Error())
@@ -97,7 +97,7 @@ func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, r
 	output, err := RenderLatex(u, source)
 
 	if err != nil {
-		ms, save := handleLatexRenderError(getSourceID, err)
+		ms, save := handleLatexRenderError(err)
 		if save {
 			saveSourceWithInteraction(s, i, source)
 		}
@@ -124,7 +124,7 @@ func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, r
 			Style:    discordgo.SecondaryButton,
 			Disabled: false,
 			Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
-			CustomID: getSourceID,
+			CustomID: GetSourceID,
 		},
 	}}).Send()
 	if err != nil {
@@ -135,7 +135,7 @@ func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, r
 	saveSourceWithInteraction(s, i, source)
 }
 
-func handleLatexRenderError(getSourceID string, err error) (*discordgo.MessageSend, bool) {
+func handleLatexRenderError(err error) (*discordgo.MessageSend, bool) {
 	if errors.As(err, &latex2png.ErrLatexCompilation{}) {
 		logger.Debug("latex/compile.go - Latex compilation error")
 
@@ -153,12 +153,16 @@ func handleLatexRenderError(getSourceID string, err error) (*discordgo.MessageSe
 		} else {
 			msg.Content = "⚠️ Compilation error:\n```\n" + err.Error() + "\n```"
 		}
-		msg.Components = []discordgo.MessageComponent{discordgo.Button{
-			Label:    "",
-			Style:    discordgo.SecondaryButton,
-			Disabled: false,
-			Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
-			CustomID: getSourceID,
+		msg.Components = []discordgo.MessageComponent{discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "",
+					Style:    discordgo.SecondaryButton,
+					Disabled: false,
+					Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
+					CustomID: GetSourceID,
+				},
+			},
 		}}
 		return msg, true
 	}

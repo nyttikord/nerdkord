@@ -17,6 +17,9 @@ var (
 )
 
 func HandleLatexSourceCode(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.Author.Bot {
+		return
+	}
 	source := m.Content
 	if !regexDetectLatexDollar.MatchString(source) &&
 		!regexDetectLatexOneLine.MatchString(source) &&
@@ -31,15 +34,17 @@ func HandleLatexSourceCode(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	st, err := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 		Content: fmt.Sprintf("**%s**", m.Author.DisplayName()),
-		Components: []discordgo.MessageComponent{
-			discordgo.Button{
-				Label:    "",
-				Style:    discordgo.SecondaryButton,
-				Disabled: false,
-				Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
-				CustomID: GetSourceID,
+		Components: []discordgo.MessageComponent{discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "",
+					Style:    discordgo.SecondaryButton,
+					Disabled: false,
+					Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
+					CustomID: GetSourceID,
+				},
 			},
-		},
+		}},
 		Files: []*discordgo.File{{
 			Name:        "generated_latex.png",
 			ContentType: "image/png",
