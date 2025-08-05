@@ -80,7 +80,7 @@ func RenderLatex(u *discordgo.User, source string) (*bytes.Buffer, error) {
 }
 
 func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, resp *cmd.ResponseBuilder, source string, getSourceID string) {
-	err := resp.Send()
+	err := resp.IsDeferred().Send()
 	if err != nil {
 		logger.Alert("latex/compile.go - Sending deferred", err.Error())
 		return

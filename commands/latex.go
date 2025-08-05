@@ -11,12 +11,11 @@ import (
 
 const (
 	LaTeXModalID = "latex_modal"
-	GetSourceID  = "latex_source"
 )
 
 func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate, data discordgo.ModalSubmitInteractionData, resp *cmd.ResponseBuilder) {
 	latexSource := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
-	latex.RenderLatexAndReply(s, i, resp, latexSource, GetSourceID)
+	latex.RenderLatexAndReply(s, i, resp, latexSource, latex.GetSourceID)
 }
 
 func OnSourceButton(_ *discordgo.Session, i *discordgo.InteractionCreate, _ discordgo.MessageComponentInteractionData, resp *cmd.ResponseBuilder) {
@@ -49,7 +48,7 @@ func OnSourceButton(_ *discordgo.Session, i *discordgo.InteractionCreate, _ disc
 func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, o cmd.OptionMap, resp *cmd.ResponseBuilder) {
 	source, ok := o["source"]
 	if ok {
-		latex.RenderLatexAndReply(s, i, resp, source.StringValue(), GetSourceID)
+		latex.RenderLatexAndReply(s, i, resp, source.StringValue(), latex.GetSourceID)
 		return
 	}
 	err := resp.SetCustomID(LaTeXModalID).

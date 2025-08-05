@@ -12,9 +12,11 @@ var (
 	regexDetectLatexOneLine   = regexp.MustCompile(`\\\([^ ]+.*\\\)`)
 	regexDetectLatexMultiLine = regexp.MustCompile(`\\\[[^ ]+.*\\]`)
 	regexDetectLatexBegEnd    = regexp.MustCompile(`\\begin[\n ]*\{.+}(\n|.)*\\end[\n ]*\{.+}`)
+
+	GetSourceID = "latex_source"
 )
 
-func HandleLatexSourceCode(s *discordgo.Session, m *discordgo.MessageCreate, getSourceID string) {
+func HandleLatexSourceCode(s *discordgo.Session, m *discordgo.MessageCreate) {
 	source := m.Content
 	if !regexDetectLatexDollar.MatchString(source) &&
 		!regexDetectLatexOneLine.MatchString(source) &&
@@ -35,7 +37,7 @@ func HandleLatexSourceCode(s *discordgo.Session, m *discordgo.MessageCreate, get
 				Style:    discordgo.SecondaryButton,
 				Disabled: false,
 				Emoji:    &discordgo.ComponentEmoji{Name: "📝"},
-				CustomID: getSourceID,
+				CustomID: GetSourceID,
 			},
 		},
 		Files: []*discordgo.File{{
