@@ -3,7 +3,7 @@ module github.com/nyttikord/nerdkord
 go 1.24
 
 require (
-	github.com/anhgelus/gokord v0.10.4-0.20250804130230-b83eaaaa6bea
+	github.com/anhgelus/gokord v0.10.4-0.20250805184112-d2ab4c838a6a
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/joho/godotenv v1.5.1
@@ -27,7 +27,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/redis/go-redis/v9 v9.11.0 // indirect
+	github.com/redis/go-redis/v9 v9.12.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	golang.org/x/crypto v0.40.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
