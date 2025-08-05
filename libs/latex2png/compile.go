@@ -3,7 +3,7 @@ package latex2png
 import (
 	"bytes"
 	"errors"
-	"github.com/anhgelus/gokord/utils"
+	"github.com/anhgelus/gokord/logger"
 	"io"
 	"os"
 	"os/exec"
@@ -31,7 +31,7 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 		return err
 	}
 	if res.Debug != nil {
-		utils.SendDebug("Latex preprocessing debug:\n" + res.Debug.Error())
+		logger.Debug("Latex preprocessing debug:\n" + res.Debug.Error())
 	}
 
 	var tempDir string
@@ -109,7 +109,7 @@ func Compile(output io.Writer, latex string, opt *Options) error {
 
 	err = os.RemoveAll(tempDir)
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Removing temporary files", err.Error())
+		logger.Alert("commands/latex.go - Removing temporary files", err.Error())
 	}
 
 	return nil
