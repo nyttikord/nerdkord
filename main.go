@@ -5,7 +5,8 @@ import (
 	"errors"
 	"flag"
 	"github.com/anhgelus/gokord"
-	"github.com/anhgelus/gokord/utils"
+	"github.com/anhgelus/gokord/cmd"
+	"github.com/anhgelus/gokord/logger"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	"github.com/nyttikord/nerdkord/commands"
@@ -28,7 +29,7 @@ var (
 func init() {
 	err := godotenv.Load()
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		utils.SendWarn("Error while loading .env file", "error", err.Error())
+		logger.Warn("Error while loading .env file", "error", err.Error())
 	}
 
 	flag.StringVar(&token, "token", os.Getenv("TOKEN"), "token of the bot")
@@ -52,54 +53,62 @@ func main() {
 		panic(err)
 	}
 
-	latexCmd := gokord.NewCommand("latex", "Compiles latex source").
+	latexCmd := cmd.New("latex", "Compiles latex source").
 		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
 		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
 		AddContext(discordgo.InteractionContextGuild).
 		AddContext(discordgo.InteractionContextPrivateChannel).
 		AddContext(discordgo.InteractionContextBotDM).
-		AddOption(gokord.NewOption(
+		AddOption(cmd.NewOption(
 			discordgo.ApplicationCommandOptionString,
 			"source",
 			"LaTeX source code",
 		)).
 		SetHandler(commands.Latex)
 
-	latexifyCmd := gokord.NewCommand("latexify", "Converts a math expression to latex").
+	latexifyCmd := cmd.New("latexify", "Converts a math expression to latex").
 		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
 		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
 		AddContext(discordgo.InteractionContextGuild).
 		AddContext(discordgo.InteractionContextPrivateChannel).
 		AddContext(discordgo.InteractionContextBotDM).
-		AddOption(gokord.NewOption(
+		AddOption(cmd.NewOption(
 			discordgo.ApplicationCommandOptionString,
 			"expression",
 			"The math expression to convert").IsRequired()).
 		SetHandler(commands.Latexify)
 
-	calculateCmd := gokord.NewCommand("calculate", "Parses and evaluates a math expression").
+	calculateCmd := cmd.New("calculate", "Parses and evaluates a math expression").
 		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
 		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
 		AddContext(discordgo.InteractionContextGuild).
 		AddContext(discordgo.InteractionContextPrivateChannel).
 		AddContext(discordgo.InteractionContextBotDM).
-		AddOption(gokord.NewOption(
+		AddOption(cmd.NewOption(
 			discordgo.ApplicationCommandOptionString,
 			"expression",
 			"The expression you want to evaluate").IsRequired()).
-		AddOption(gokord.NewOption(
+		AddOption(cmd.NewOption(
 			discordgo.ApplicationCommandOptionInteger,
 			"precision",
 			"The number of digits you want. Default : 6")).
 		SetHandler(commands.Calculate)
 
-	preamble := gokord.NewCommand("preamble", "Show and edit your preamble").
+	preamble := cmd.New("preamble", "Show and edit your preamble").
 		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
 		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
 		AddContext(discordgo.InteractionContextGuild).
 		AddContext(discordgo.InteractionContextPrivateChannel).
 		AddContext(discordgo.InteractionContextBotDM).
 		SetHandler(commands.Preamble)
+
+	about := cmd.New("about", "About the bot").
+		AddIntegrationType(discordgo.ApplicationIntegrationGuildInstall).
+		AddIntegrationType(discordgo.ApplicationIntegrationUserInstall).
+		AddContext(discordgo.InteractionContextGuild).
+		AddContext(discordgo.InteractionContextPrivateChannel).
+		AddContext(discordgo.InteractionContextBotDM).
+		SetHandler(commands.About)
 
 	bot := gokord.Bot{
 		Token: token,
@@ -117,25 +126,23 @@ func main() {
 				Content: "nerdkord " + Version.String(),
 			},
 		},
-		Commands: []gokord.CommandBuilder{
-			latexCmd, latexifyCmd, calculateCmd, preamble,
+		Commands: []cmd.CommandBuilder{
+			latexCmd, latexifyCmd, calculateCmd, preamble, about,
 		},
-		AfterInit:   afterInit,
 		Innovations: innovations,
 		Version:     Version,
 		Intents:     discordgo.IntentsAllWithoutPrivileged,
 	}
-	bot.Start()
-}
 
-func afterInit(dg *discordgo.Session) {
 	//commands: latex
-	dg.AddHandler(commands.OnLatexModalSubmit)
-	dg.AddHandler(commands.OnSourceButton)
+	bot.HandleModal(commands.OnLatexModalSubmit, commands.LaTeXModalID)
+	bot.HandleMessageComponent(commands.OnSourceButton, commands.GetSourceID)
 	//commands: preamble
-	dg.AddHandler(commands.OnEditPreambleButton)
-	dg.AddHandler(commands.OnResetPromptPreambleButton)
-	dg.AddHandler(commands.OnPreambleModalSubmit)
+	bot.HandleMessageComponent(commands.OnEditPreambleButton, commands.EditPreambleID)
+	bot.HandleMessageComponent(commands.OnResetPromptPreambleButton, commands.ResetPreambleID)
+	bot.HandleMessageComponent(commands.OnReallyResetPromptPreambleButton, commands.ReallyResetPreambleID)
 	//event: latex
-	dg.AddHandler(latex.HandleLatexSourceCode)
+	bot.AddHandler(latex.HandleLatexSourceCode)
+
+	bot.Start()
 }

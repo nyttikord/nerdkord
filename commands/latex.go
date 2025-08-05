@@ -3,7 +3,8 @@ package commands
 import (
 	"bytes"
 	"fmt"
-	"github.com/anhgelus/gokord/utils"
+	"github.com/anhgelus/gokord/cmd"
+	"github.com/anhgelus/gokord/logger"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/latex"
 )
@@ -13,41 +14,19 @@ const (
 	GetSourceID  = "latex_source"
 )
 
-func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type != discordgo.InteractionModalSubmit {
-		return
-	}
-
-	submitData := i.ModalSubmitData()
-	if submitData.CustomID != LaTeXModalID {
-		utils.SendDebug("commands/latex.go - not a latex modal ID")
-		return
-	}
-
-	resp := utils.NewResponseBuilder(s, i).IsDeferred()
-
-	latexSource := submitData.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
-
+func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate, data discordgo.ModalSubmitInteractionData, resp *cmd.ResponseBuilder) {
+	latexSource := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 	latex.RenderLatexAndReply(s, i, resp, latexSource, GetSourceID)
 }
 
-func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type != discordgo.InteractionMessageComponent {
-		return
-	}
-
-	submitData := i.MessageComponentData()
-	if submitData.CustomID != GetSourceID {
-		utils.SendDebug("commands/latex.go - not a source button ID")
-		return
-	}
-	resp := utils.NewResponseBuilder(s, i).IsEphemeral()
+func OnSourceButton(_ *discordgo.Session, i *discordgo.InteractionCreate, _ discordgo.MessageComponentInteractionData, resp *cmd.ResponseBuilder) {
+	resp.IsEphemeral()
 	k := fmt.Sprintf("%s:%s", i.ChannelID, i.Message.ID)
 	source, ok := latex.GetSource(k)
 	if !ok {
-		utils.SendWarn("cannot find source", "key", k)
+		logger.Warn("cannot find source", "key", k)
 		if err := resp.SetMessage("Cannot find the source").Send(); err != nil {
-			utils.SendAlert("commands/latex.go - Sending error cannot find source", err.Error())
+			logger.Alert("commands/latex.go - Sending error cannot find source", err.Error())
 		}
 		return
 	}
@@ -63,11 +42,11 @@ func OnSourceButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		resp.SetMessage(msg)
 	}
 	if err := resp.Send(); err != nil {
-		utils.SendAlert("commands/latex.go - Sending source", err.Error())
+		logger.Alert("commands/latex.go - Sending source", err.Error())
 	}
 }
 
-func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, o utils.OptionMap, resp *utils.ResponseBuilder) {
+func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, o cmd.OptionMap, resp *cmd.ResponseBuilder) {
 	source, ok := o["source"]
 	if ok {
 		latex.RenderLatexAndReply(s, i, resp, source.StringValue(), GetSourceID)
@@ -88,6 +67,6 @@ func Latex(s *discordgo.Session, i *discordgo.InteractionCreate, o utils.OptionM
 			},
 		}}).Send()
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Sending modal", err.Error())
+		logger.Alert("commands/latex.go - Sending modal", err.Error())
 	}
 }

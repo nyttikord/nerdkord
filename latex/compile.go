@@ -3,7 +3,8 @@ package latex
 import (
 	"bytes"
 	"errors"
-	"github.com/anhgelus/gokord/utils"
+	"github.com/anhgelus/gokord/cmd"
+	"github.com/anhgelus/gokord/logger"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/db"
 	"github.com/nyttikord/nerdkord/libs/img"
@@ -60,10 +61,10 @@ func RenderLatex(u *discordgo.User, source string) (*bytes.Buffer, error) {
 	return output, nil
 }
 
-func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, resp *utils.ResponseBuilder, source string, getSourceID string) {
+func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, resp *cmd.ResponseBuilder, source string, getSourceID string) {
 	err := resp.Send()
 	if err != nil {
-		utils.SendAlert("latex/compile.go - Sending deferred", err.Error())
+		logger.Alert("latex/compile.go - Sending deferred", err.Error())
 		return
 	}
 	resp.IsEphemeral()
@@ -90,7 +91,7 @@ func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, r
 			resp.AddComponent(c)
 		}
 		if err = resp.Send(); err != nil {
-			utils.SendAlert("latex/compile.go - Sending latex compiling error", err.Error())
+			logger.Alert("latex/compile.go - Sending latex compiling error", err.Error())
 		}
 		return
 	}
@@ -109,7 +110,7 @@ func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, r
 		},
 	}}).Send()
 	if err != nil {
-		utils.SendAlert("latex/compile.go - Sending latex", err.Error())
+		logger.Alert("latex/compile.go - Sending latex", err.Error())
 		return
 	}
 	// saving source
@@ -118,7 +119,7 @@ func RenderLatexAndReply(s *discordgo.Session, i *discordgo.InteractionCreate, r
 
 func handleLatexRenderError(getSourceID string, err error) (*discordgo.MessageSend, bool) {
 	if errors.As(err, &latex2png.ErrLatexCompilation{}) {
-		utils.SendDebug("latex/compile.go - Latex compilation error")
+		logger.Debug("latex/compile.go - Latex compilation error")
 
 		msg := &discordgo.MessageSend{}
 
@@ -144,13 +145,13 @@ func handleLatexRenderError(getSourceID string, err error) (*discordgo.MessageSe
 		return msg, true
 	}
 	if errors.Is(err, latex2png.ErrPreprocessor) {
-		utils.SendDebug("latex/compile.go - Preprocessing error")
+		logger.Debug("latex/compile.go - Preprocessing error")
 		return &discordgo.MessageSend{
 			Content: "```\n" + err.Error() + "\n```",
 		}, false
 	}
 
-	utils.SendAlert("latex/compile.go - Compiling latex", err.Error())
+	logger.Alert("latex/compile.go - Compiling latex", err.Error())
 	return &discordgo.MessageSend{
 		Content: "Unexpected error while compiling latex. Please report.",
 	}, false

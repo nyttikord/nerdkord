@@ -2,7 +2,8 @@ package latex
 
 import (
 	"fmt"
-	"github.com/anhgelus/gokord/utils"
+	"github.com/anhgelus/gokord/cmd"
+	"github.com/anhgelus/gokord/logger"
 	"github.com/bwmarrin/discordgo"
 	"time"
 )
@@ -19,13 +20,13 @@ func GetSource(k string) (*string, bool) {
 func saveSourceWithInteraction(s *discordgo.Session, i *discordgo.InteractionCreate, source string) {
 	m, err := s.InteractionResponse(i.Interaction)
 	if err != nil {
-		utils.SendAlert("commands/latex.go - Getting interaction response", err.Error(), "id", i.ID)
+		logger.Alert("commands/latex.go - Getting interaction response", err.Error(), "id", i.ID)
 		return
 	}
 	saveSource(s, m, source, func(s *discordgo.Session) {
-		err := utils.NewResponseBuilder(s, i).IsEdit().Send()
+		err := cmd.NewResponseBuilder(s, i).IsEdit().Send()
 		if err != nil {
-			utils.SendAlert("commands/latex.go - Cannot remove source button", err.Error())
+			logger.Alert("commands/latex.go - Cannot remove source button", err.Error())
 		}
 	})
 }
@@ -40,7 +41,7 @@ func saveSourceWithMessage(s *discordgo.Session, m *discordgo.Message, source st
 			Channel:     m.ChannelID,
 		})
 		if err != nil {
-			utils.SendAlert("commands/latex.go - Cannot remove source button", err.Error())
+			logger.Alert("commands/latex.go - Cannot remove source button", err.Error())
 		}
 	})
 }
@@ -48,7 +49,7 @@ func saveSourceWithMessage(s *discordgo.Session, m *discordgo.Message, source st
 func saveSource(s *discordgo.Session, m *discordgo.Message, source string, fn func(s *discordgo.Session)) {
 	k := fmt.Sprintf("%s:%s", m.ChannelID, m.ID)
 	sourceMap[k] = &source
-	utils.SendDebug("source saved", "key", k)
+	logger.Debug("source saved", "key", k)
 	// remove source button after 5 minutes and clean map
 	go func(s *discordgo.Session, k string) {
 		time.Sleep(5 * time.Minute)

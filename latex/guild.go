@@ -2,7 +2,7 @@ package latex
 
 import (
 	"fmt"
-	"github.com/anhgelus/gokord/utils"
+	"github.com/anhgelus/gokord/logger"
 	"github.com/bwmarrin/discordgo"
 	"regexp"
 )
@@ -45,7 +45,7 @@ func HandleLatexSourceCode(s *discordgo.Session, m *discordgo.MessageCreate, get
 		}},
 	})
 	if err != nil {
-		utils.SendAlert("latex/guild.go - Sending latex", err.Error())
+		logger.Alert("latex/guild.go - Sending latex", err.Error())
 		return
 	}
 	saveSourceWithMessage(s, st, source)
