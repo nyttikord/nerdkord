@@ -12,6 +12,7 @@ import (
 	"image/color"
 	"image/png"
 	"math"
+	"text/template"
 )
 
 var (
@@ -23,7 +24,24 @@ var (
 		CommandsBeforeBeginDocument: []string{"usepackage"},
 		TemplateFile:                "config/template.tex",
 	}
+
+	defaultPreamble = ""
 )
+
+// TestPreamble returns true if the preamble is valid
+func TestPreamble(preamble string) bool {
+	opt := &*defaultPreprocessingOptions
+	opt.UserPreamble = preamble
+	return latex2png.Compile(new(bytes.Buffer), "hey, this code was written by a furry", &latex2png.Options{
+		LatexBinary:          "latex",
+		DvipngBinary:         "dvipng",
+		OutputFormat:         latex2png.PNG,
+		BackgroundColor:      color.Black,
+		ForegroundColor:      color.Black,
+		ImageDPI:             10, // reduce DPI for faster results
+		PreprocessingOptions: opt,
+	}) == nil
+}
 
 func RenderLatex(u *discordgo.User, source string) (*bytes.Buffer, error) {
 	nerd, err := db.GetNerd(u.ID)
@@ -155,4 +173,27 @@ func handleLatexRenderError(getSourceID string, err error) (*discordgo.MessageSe
 	return &discordgo.MessageSend{
 		Content: "Unexpected error while compiling latex. Please report.",
 	}, false
+}
+
+func GetDefaultPreamble() (string, error) {
+	if len(defaultPreamble) == 0 {
+		t, err := template.ParseFiles(defaultPreprocessingOptions.TemplateFile)
+		if err != nil {
+			logger.Alert(
+				"commands/preamble.go - Parsing template file", err.Error(),
+				"path", defaultPreprocessingOptions.TemplateFile,
+			)
+		} else {
+			wr := new(bytes.Buffer)
+			err = t.ExecuteTemplate(wr, "defaultPreamble", nil)
+			if err != nil {
+				return "", err
+			}
+			defaultPreamble = wr.String()
+		}
+	}
+	if len(defaultPreamble) == 0 {
+		return "Default one", nil
+	}
+	return defaultPreamble, nil
 }
