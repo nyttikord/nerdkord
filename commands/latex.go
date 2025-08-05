@@ -40,7 +40,7 @@ func OnLatexModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate, da
 }
 
 func renderLatex(s *discordgo.Session, i *discordgo.InteractionCreate, resp *cmd.ResponseBuilder, source string) {
-	err := resp.Send()
+	err := resp.IsDeferred().Send()
 	if err != nil {
 		logger.Alert("commands/latex.go - Sending deferred", err.Error())
 		return
