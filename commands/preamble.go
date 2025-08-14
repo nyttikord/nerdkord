@@ -1,26 +1,19 @@
 package commands
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/anhgelus/gokord/cmd"
 	"github.com/anhgelus/gokord/logger"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nyttikord/nerdkord/db"
-	"github.com/nyttikord/nerdkord/libs/latex2png"
-	"image/color"
+	"github.com/nyttikord/nerdkord/latex"
 	"strings"
-	"text/template"
 )
 
 const (
 	EditPreambleID        = "edit_preamble"
 	ResetPreambleID       = "reset_preamble"
 	ReallyResetPreambleID = "really_reset_preamble"
-)
-
-var (
-	defaultPreamble = ""
 )
 
 func OnEditPreambleButton(_ *discordgo.Session, i *discordgo.InteractionCreate, _ discordgo.MessageComponentInteractionData, resp *cmd.ResponseBuilder) {
@@ -35,7 +28,7 @@ func OnEditPreambleButton(_ *discordgo.Session, i *discordgo.InteractionCreate, 
 	if err != nil {
 		logger.Warn("Getting nerd profile", "err", err.Error(), "discord_id", u.ID)
 
-		val, err = getDefaultPreamble()
+		val, err = latex.GetDefaultPreamble()
 		if err == nil {
 			logger.Debug("Using default preamble as placeholder")
 		} else {
@@ -46,7 +39,7 @@ func OnEditPreambleButton(_ *discordgo.Session, i *discordgo.InteractionCreate, 
 	} else {
 		val = nerd.Preamble
 		if len(nerd.Preamble) == 0 {
-			val, err = getDefaultPreamble()
+			val, err = latex.GetDefaultPreamble()
 			if err != nil {
 				logger.Warn("Getting default preamble", "err", err.Error())
 			}
@@ -161,17 +154,7 @@ func OnPreambleModalSubmit(s *discordgo.Session, i *discordgo.InteractionCreate)
 		return
 	}
 	logger.Debug("Checking preamble's validity", "discord_id", u.ID)
-	file := new(bytes.Buffer)
-	err = latex2png.Compile(file, "hey, this code was written by a furry", &latex2png.Options{
-		LatexBinary:          "latex",
-		DvipngBinary:         "dvipng",
-		OutputFormat:         latex2png.PNG,
-		BackgroundColor:      color.Black,
-		ForegroundColor:      color.Black,
-		ImageDPI:             10, // reduce DPI for faster results
-		PreprocessingOptions: defaultPreprocessingOptions,
-	})
-	if err != nil {
+	if !latex.TestPreamble(val) {
 		if err = resp.SetMessage("Your preamble is invalid.").Send(); err != nil {
 			logger.Alert("commands/preamble.go - Sending invalid preamble", err.Error())
 		}
@@ -209,7 +192,7 @@ func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, _ cmd.Option
 		return
 	}
 	if len(nerd.Preamble) == 0 {
-		nerd.Preamble, err = getDefaultPreamble()
+		nerd.Preamble, err = latex.GetDefaultPreamble()
 		if err != nil {
 			if err = resp.SetMessage("An error occurred. Please report the bug.").Send(); err != nil {
 				logger.Alert("commands/preamble.go - Sending error occurred while parsing template", err.Error())
@@ -240,27 +223,4 @@ func Preamble(_ *discordgo.Session, i *discordgo.InteractionCreate, _ cmd.Option
 	if err != nil {
 		logger.Alert("commands/preamble.go - Sending preamble", err.Error(), "discord_id", u.ID)
 	}
-}
-
-func getDefaultPreamble() (string, error) {
-	if len(defaultPreamble) == 0 {
-		t, err := template.ParseFiles(defaultPreprocessingOptions.TemplateFile)
-		if err != nil {
-			logger.Alert(
-				"commands/preamble.go - Parsing template file", err.Error(),
-				"path", defaultPreprocessingOptions.TemplateFile,
-			)
-		} else {
-			wr := new(bytes.Buffer)
-			err = t.ExecuteTemplate(wr, "defaultPreamble", nil)
-			if err != nil {
-				return "", err
-			}
-			defaultPreamble = wr.String()
-		}
-	}
-	if len(defaultPreamble) == 0 {
-		return "Default one", nil
-	}
-	return defaultPreamble, nil
 }

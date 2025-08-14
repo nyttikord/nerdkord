@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/nyttikord/nerdkord/commands"
 	"github.com/nyttikord/nerdkord/db"
+	"github.com/nyttikord/nerdkord/latex"
 	"os"
 )
 
@@ -135,11 +136,13 @@ func main() {
 
 	//commands: latex
 	bot.HandleModal(commands.OnLatexModalSubmit, commands.LaTeXModalID)
-	bot.HandleMessageComponent(commands.OnSourceButton, commands.GetSourceID)
+	bot.HandleMessageComponent(commands.OnSourceButton, latex.GetSourceID)
 	//commands: preamble
 	bot.HandleMessageComponent(commands.OnEditPreambleButton, commands.EditPreambleID)
 	bot.HandleMessageComponent(commands.OnResetPromptPreambleButton, commands.ResetPreambleID)
 	bot.HandleMessageComponent(commands.OnReallyResetPromptPreambleButton, commands.ReallyResetPreambleID)
+	//event: latex
+	bot.AddHandler(latex.HandleLatexSourceCode)
 
 	bot.Start()
 }
