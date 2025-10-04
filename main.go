@@ -134,6 +134,7 @@ func main() {
 		Intents:     discordgo.IntentsAllWithoutPrivileged,
 	}
 
+	// boss
 	//commands: latex
 	bot.HandleModal(commands.OnLatexModalSubmit, commands.LaTeXModalID)
 	bot.HandleMessageComponent(commands.OnSourceButton, latex.GetSourceID)
